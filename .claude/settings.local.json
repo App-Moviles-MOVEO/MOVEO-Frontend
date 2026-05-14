@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew.bat compileDebugKotlin)",
+      "Bash(C:/Users/goku6/AppData/Local/Android/Sdk/platform-tools/adb.exe devices *)",
+      "Bash(C:/Users/goku6/AppData/Local/Android/Sdk/emulator/emulator.exe *)",
+      "Bash(./gradlew.bat assembleDebug)",
+      "Bash(\"C:/Users/goku6/AppData/Local/Android/Sdk/platform-tools/adb.exe\" wait-for-device *)",
+      "Bash(\"C:/Users/goku6/AppData/Local/Android/Sdk/platform-tools/adb.exe\" shell *)",
+      "Bash(tasklist)",
+      "Bash(findstr -i \"emulator qemu\")",
+      "PowerShell(Start-Process -FilePath \"C:\\\\Users\\\\goku6\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe\" -ArgumentList \"-avd\",\"Pixel_7\",\"-no-snapshot-save\" -WindowStyle Normal)",
+      "PowerShell($proc = Start-Process -FilePath \"C:\\\\Users\\\\goku6\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe\" -ArgumentList \"-avd\",\"Pixel_7\" -PassThru; Write-Output \"PID: $\\($proc.Id\\)\")",
+      "Bash(cmd.exe *)",
+      "Bash(findstr -i \"qemu emulator\")"
+    ]
+  }
+}
