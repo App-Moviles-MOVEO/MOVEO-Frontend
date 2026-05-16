@@ -12,7 +12,12 @@
       "PowerShell(Start-Process -FilePath \"C:\\\\Users\\\\goku6\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe\" -ArgumentList \"-avd\",\"Pixel_7\",\"-no-snapshot-save\" -WindowStyle Normal)",
       "PowerShell($proc = Start-Process -FilePath \"C:\\\\Users\\\\goku6\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe\" -ArgumentList \"-avd\",\"Pixel_7\" -PassThru; Write-Output \"PID: $\\($proc.Id\\)\")",
       "Bash(cmd.exe *)",
-      "Bash(findstr -i \"qemu emulator\")"
+      "Bash(findstr -i \"qemu emulator\")",
+      "Bash(dir \"c:\\\\Desarrollo\\\\cosas xd\\\\MOVEO-Frontend\")",
+      "Bash(dir \"c:\\\\Desarrollo\\\\cosas xd\\\\MOVEO-Frontend\\\\guia\")",
+      "Bash(dir \"c:\\\\Desarrollo\\\\cosas xd\\\\MOVEO-Frontend\\\\app\")",
+      "Bash(dir \"c:\\\\Desarrollo\\\\cosas xd\\\\MOVEO-Frontend\\\\app\\\\src\" /S /B)",
+      "Bash(./gradlew.bat clean *)"
     ]
   }
 }
