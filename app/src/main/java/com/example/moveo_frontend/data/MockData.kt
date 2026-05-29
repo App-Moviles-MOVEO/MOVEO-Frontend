@@ -1,5 +1,10 @@
 package com.example.moveo_frontend.data
 
+import com.example.moveo_frontend.data.remote.dto.ChatMessageDto
+import com.example.moveo_frontend.data.remote.dto.NotificationDto
+import com.example.moveo_frontend.data.remote.dto.PaymentMethodDto
+import com.example.moveo_frontend.data.remote.dto.TrackingPointDto
+
 object MockData {
     val currentUser = User(
         name = "Esther Ospina",
@@ -13,151 +18,18 @@ object MockData {
     )
 
     val vehicles = listOf(
-        Vehicle(
-            id = "v1",
-            brand = "Hyundai",
-            model = "i10",
-            year = 2022,
-            pricePerDay = 85,
-            rating = 4.9,
-            ownerName = "Rosa M.",
-            ownerVerified = true,
-            location = "Surco, Lima",
-            type = "Compacto",
-            transmission = "Mecánico",
-            seats = 5,
-            fuel = "Gasolina",
-            description = "Compacto ideal para la ciudad. Bajo consumo, recién pasado revisión técnica.",
-            imageEmoji = "🚗"
-        ),
-        Vehicle(
-            id = "v2",
-            brand = "Toyota",
-            model = "Yaris",
-            year = 2023,
-            pricePerDay = 110,
-            rating = 4.8,
-            ownerName = "Carlos P.",
-            ownerVerified = true,
-            location = "Magdalena, Lima",
-            type = "Sedán",
-            transmission = "Automático",
-            seats = 5,
-            fuel = "Gasolina",
-            description = "Toyota Yaris automático, perfecto para viajes ejecutivos.",
-            imageEmoji = "🚙"
-        ),
-        Vehicle(
-            id = "v3",
-            brand = "Kia",
-            model = "Sportage",
-            year = 2024,
-            pricePerDay = 180,
-            rating = 5.0,
-            ownerName = "Alex A.",
-            ownerVerified = true,
-            location = "Miraflores, Lima",
-            type = "SUV",
-            transmission = "Automático",
-            seats = 7,
-            fuel = "Gasolina",
-            description = "SUV familiar, espaciosa y cómoda para viajes largos.",
-            imageEmoji = "🚐"
-        ),
-        Vehicle(
-            id = "v4",
-            brand = "Chevrolet",
-            model = "Spark",
-            year = 2021,
-            pricePerDay = 70,
-            rating = 4.6,
-            ownerName = "Ana M.",
-            ownerVerified = true,
-            location = "Surquillo, Lima",
-            type = "Compacto",
-            transmission = "Mecánico",
-            seats = 4,
-            fuel = "Gasolina",
-            description = "Económico y ágil. Ideal para uso urbano diario.",
-            imageEmoji = "🚗"
-        ),
-        Vehicle(
-            id = "v5",
-            brand = "Mazda",
-            model = "CX-5",
-            year = 2023,
-            pricePerDay = 200,
-            rating = 4.9,
-            ownerName = "David G.",
-            ownerVerified = true,
-            location = "San Isidro, Lima",
-            type = "SUV",
-            transmission = "Automático",
-            seats = 5,
-            fuel = "Gasolina",
-            description = "SUV premium con todas las comodidades.",
-            imageEmoji = "🚙"
-        )
+        Vehicle("v1", "Hyundai", "i10", 2022, 85, 4.9, "Rosa M.", true, "Surco, Lima", "Compacto", "Mecánico", 5, "Gasolina", "Compacto ideal para la ciudad. Bajo consumo, recién pasado revisión técnica.", "🚗"),
+        Vehicle("v2", "Toyota", "Yaris", 2023, 110, 4.8, "Carlos P.", true, "Magdalena, Lima", "Sedán", "Automático", 5, "Gasolina", "Toyota Yaris automático, perfecto para viajes ejecutivos.", "🚙"),
+        Vehicle("v3", "Kia", "Sportage", 2024, 180, 5.0, "Alex A.", true, "Miraflores, Lima", "SUV", "Automático", 7, "Gasolina", "SUV familiar, espaciosa y cómoda para viajes largos.", "🚐"),
+        Vehicle("v4", "Chevrolet", "Spark", 2021, 70, 4.6, "Ana M.", true, "Surquillo, Lima", "Compacto", "Mecánico", 4, "Gasolina", "Económico y ágil. Ideal para uso urbano diario.", "🚗"),
+        Vehicle("v5", "Mazda", "CX-5", 2023, 200, 4.9, "David G.", true, "San Isidro, Lima", "SUV", "Automático", 5, "Gasolina", "SUV premium con todas las comodidades.", "🚙")
     )
 
     val routes = listOf(
-        CarpoolRoute(
-            id = "r1",
-            driverName = "Diego A.",
-            driverRating = 4.9,
-            verified = true,
-            origin = "Los Olivos",
-            destination = "UPC Villa",
-            departureTime = "07:15",
-            date = "Vie 9 may",
-            seatsAvailable = 2,
-            pricePerSeat = 8,
-            vehicleModel = "Toyota Yaris",
-            community = "UPC"
-        ),
-        CarpoolRoute(
-            id = "r2",
-            driverName = "María L.",
-            driverRating = 5.0,
-            verified = true,
-            origin = "San Juan de Lurigancho",
-            destination = "San Isidro",
-            departureTime = "06:30",
-            date = "L-V",
-            seatsAvailable = 3,
-            pricePerSeat = 10,
-            vehicleModel = "Kia Picanto",
-            community = "UPC",
-            onlyWomen = true
-        ),
-        CarpoolRoute(
-            id = "r3",
-            driverName = "Javier Q.",
-            driverRating = 4.8,
-            verified = true,
-            origin = "San Miguel",
-            destination = "UPC Monterrico",
-            departureTime = "07:00",
-            date = "L-V",
-            seatsAvailable = 1,
-            pricePerSeat = 7,
-            vehicleModel = "Hyundai Accent",
-            community = "UPC"
-        ),
-        CarpoolRoute(
-            id = "r4",
-            driverName = "Paul E.",
-            driverRating = 4.7,
-            verified = true,
-            origin = "Miraflores",
-            destination = "San Isidro (Centro Empresarial)",
-            departureTime = "08:00",
-            date = "L-V",
-            seatsAvailable = 2,
-            pricePerSeat = 6,
-            vehicleModel = "Toyota Corolla",
-            community = "Empresa"
-        )
+        CarpoolRoute("r1", "Diego A.", 4.9, true, "Los Olivos", "UPC Villa", "07:15", "Vie 9 may", 2, 8, "Toyota Yaris", "UPC"),
+        CarpoolRoute("r2", "María L.", 5.0, true, "San Juan de Lurigancho", "San Isidro", "06:30", "L-V", 3, 10, "Kia Picanto", "UPC", onlyWomen = true),
+        CarpoolRoute("r3", "Javier Q.", 4.8, true, "San Miguel", "UPC Monterrico", "07:00", "L-V", 1, 7, "Hyundai Accent", "UPC"),
+        CarpoolRoute("r4", "Paul E.", 4.7, true, "Miraflores", "San Isidro (Centro Empresarial)", "08:00", "L-V", 2, 6, "Toyota Corolla", "Empresa")
     )
 
     val reviews = listOf(
@@ -170,5 +42,33 @@ object MockData {
         Reservation("res1", "Hyundai i10", "9 May", "11 May", 255, "Confirmado"),
         Reservation("res2", "Toyota Yaris", "15 May", "16 May", 110, "En curso"),
         Reservation("res3", "Kia Sportage", "1 May", "3 May", 540, "Finalizado")
+    )
+
+    val notifications = listOf(
+        NotificationDto("n1", "Reserva confirmada", "Tu Hyundai i10 está listo para el 9 de mayo.", "hace 5 min", false),
+        NotificationDto("n2", "Nuevo mensaje de Diego A.", "Nos vemos a las 7:15 en el paradero.", "hace 1 h", false),
+        NotificationDto("n3", "Verificación KYC aprobada", "Ya eres un usuario verificado.", "ayer", true),
+        NotificationDto("n4", "Ganaste 50 pts", "Por completar tu primer alquiler.", "hace 2 d", true)
+    )
+
+    val paymentMethods = listOf(
+        PaymentMethodDto("pm1", "Pago instantáneo", "Yape"),
+        PaymentMethodDto("pm2", "Pago instantáneo", "Plin"),
+        PaymentMethodDto("pm3", "Tarjeta de crédito", "Visa **** 4521")
+    )
+
+    fun chatWith(peerId: String) = listOf(
+        ChatMessageDto("c1", peerId, "¡Hola! Acabo de confirmar el viaje.", "10:02", false),
+        ChatMessageDto("c2", "me", "Perfecto, te veo en el punto de encuentro.", "10:03", true),
+        ChatMessageDto("c3", peerId, "Voy llegando en 5 min.", "10:08", false),
+        ChatMessageDto("c4", "me", "Listo, ya estoy aquí.", "10:09", true)
+    )
+
+    val trackingPoints = listOf(
+        TrackingPointDto(-12.0464, -77.0428, "10:00"),
+        TrackingPointDto(-12.0500, -77.0470, "10:05"),
+        TrackingPointDto(-12.0550, -77.0500, "10:10"),
+        TrackingPointDto(-12.0600, -77.0550, "10:15"),
+        TrackingPointDto(-12.0650, -77.0600, "10:20")
     )
 }

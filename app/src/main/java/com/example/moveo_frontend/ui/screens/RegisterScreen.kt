@@ -16,18 +16,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.data.UserRole
 import com.example.moveo_frontend.ui.components.WPButton
+import com.example.moveo_frontend.ui.viewmodel.AuthViewModel
+import com.example.moveo_frontend.ui.viewmodel.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(onBack: () -> Unit, onContinue: () -> Unit) {
+    val vm: AuthViewModel = viewModel()
+    val state by vm.register.collectAsState()
+
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var role by remember { mutableStateOf<UserRole?>(null) }
     val scroll = rememberScrollState()
+
+    LaunchedEffect(state) {
+        if (state is UiState.Success) onContinue()
+    }
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Crear cuenta") }, navigationIcon = {
@@ -59,9 +69,22 @@ fun RegisterScreen(onBack: () -> Unit, onContinue: () -> Unit) {
             RoleOption("Arrendatario", "Alquilo vehículos", role == UserRole.RENTER) { role = UserRole.RENTER }
             Spacer(Modifier.height(10.dp))
             RoleOption("Pasajero", "Busco viajes compartidos", role == UserRole.PASSENGER) { role = UserRole.PASSENGER }
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(20.dp))
 
-            WPButton("Continuar a verificación", onClick = onContinue, enabled = role != null)
+            if (state is UiState.Error) {
+                Text(
+                    (state as UiState.Error).message,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 13.sp
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+
+            WPButton(
+                text = if (state is UiState.Loading) "Creando..." else "Continuar a verificación",
+                onClick = { vm.doRegister(name, email, phone, password, role!!.name) },
+                enabled = role != null && state !is UiState.Loading
+            )
             Spacer(Modifier.height(16.dp))
         }
     }

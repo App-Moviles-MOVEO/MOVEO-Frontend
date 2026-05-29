@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"c:\\\\Desarrollo\\\\cosas xd\\\\MOVEO-Frontend\" && find ~/.gradle/caches/modules-2/files-2.1/androidx.compose.material -name \"material-icons-extended-android-*.jar\" 2>/dev/null | head -3)",
+      "Read(//c/Users/goku6/.gradle/caches/modules-2/files-2.1/androidx.compose.material/**)"
+    ]
+  }
+}

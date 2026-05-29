@@ -18,22 +18,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.moveo_frontend.data.MockData
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.data.Vehicle
 import com.example.moveo_frontend.ui.components.RatingChip
+import com.example.moveo_frontend.ui.components.StateContainer
 import com.example.moveo_frontend.ui.components.VerifiedBadge
+import com.example.moveo_frontend.ui.viewmodel.VehiclesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CatalogScreen(onBack: () -> Unit, onVehicleClick: (String) -> Unit) {
+    val vm: VehiclesViewModel = viewModel()
+    val state by vm.state.collectAsState()
+    val filter by vm.filter.collectAsState()
     val filters = listOf("Todos", "Compacto", "Sedán", "SUV")
-    var selected by remember { mutableStateOf("Todos") }
-    val filtered = if (selected == "Todos") MockData.vehicles else MockData.vehicles.filter { it.type == selected }
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Catálogo de vehículos") }, navigationIcon = {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-        }, actions = { IconButton(onClick = {}) { Icon(Icons.Default.Search, null) } })
+        }, actions = { IconButton(onClick = { vm.load() }) { Icon(Icons.Default.Search, null) } })
     }) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             LazyRow(
@@ -42,18 +45,26 @@ fun CatalogScreen(onBack: () -> Unit, onVehicleClick: (String) -> Unit) {
             ) {
                 items(filters) { f ->
                     FilterChip(
-                        selected = f == selected,
-                        onClick = { selected = f },
+                        selected = f == filter,
+                        onClick = { vm.setFilter(f) },
                         label = { Text(f) }
                     )
                 }
             }
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(filtered) { v ->
-                    VehicleListItem(v) { onVehicleClick(v.id) }
+            StateContainer(state, onRetry = { vm.load() }) { vehicles ->
+                if (vehicles.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No hay vehículos disponibles", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(vehicles) { v ->
+                            VehicleListItem(v) { onVehicleClick(v.id) }
+                        }
+                    }
                 }
             }
         }

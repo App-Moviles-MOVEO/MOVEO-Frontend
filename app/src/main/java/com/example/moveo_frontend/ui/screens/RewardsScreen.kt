@@ -9,20 +9,26 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.moveo_frontend.data.MockData
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.ui.components.SectionTitle
 import com.example.moveo_frontend.ui.theme.OrangeReward
+import com.example.moveo_frontend.ui.viewmodel.ProfileViewModel
+import com.example.moveo_frontend.ui.viewmodel.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RewardsScreen(onBack: () -> Unit) {
-    val user = MockData.currentUser
+    val vm: ProfileViewModel = viewModel()
+    val state by vm.user.collectAsState()
+    val rewardPoints = (state as? UiState.Success)?.data?.rewardPoints ?: 0
     val scroll = rememberScrollState()
     Scaffold(topBar = {
         TopAppBar(title = { Text("Recompensas") }, navigationIcon = {
@@ -38,7 +44,7 @@ fun RewardsScreen(onBack: () -> Unit) {
                 Column(Modifier.padding(20.dp)) {
                     Text("Nivel Plata", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                     Spacer(Modifier.height(6.dp))
-                    Text("${user.rewardPoints} pts", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                    Text("$rewardPoints pts", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
                     LinearProgressIndicator(
                         progress = { 0.45f },

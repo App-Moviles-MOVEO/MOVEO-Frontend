@@ -7,63 +7,90 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.moveo_frontend.data.MockData
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.ui.components.SectionTitle
+import com.example.moveo_frontend.ui.components.StateContainer
 import com.example.moveo_frontend.ui.components.VerifiedBadge
+import com.example.moveo_frontend.ui.viewmodel.AuthViewModel
+import com.example.moveo_frontend.ui.viewmodel.ProfileViewModel
 
 @Composable
-fun ProfileScreen() {
-    val user = MockData.currentUser
+fun ProfileScreen(onLogout: () -> Unit) {
+    val vm: ProfileViewModel = viewModel()
+    val auth: AuthViewModel = viewModel()
+    val state by vm.user.collectAsState()
+    val reviews by vm.reviews.collectAsState()
     val scroll = rememberScrollState()
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(scroll)
-    ) {
-        Surface(color = MaterialTheme.colorScheme.primary, modifier = Modifier.fillMaxWidth()) {
+
+    Box(Modifier.fillMaxSize()) {
+        StateContainer(state, onRetry = { vm.load() }) { user ->
             Column(
-                Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .verticalScroll(scroll)
             ) {
-                Box(
-                    Modifier.size(88.dp).background(Color.White, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) { Text(user.name.first().toString(), color = MaterialTheme.colorScheme.primary, fontSize = 36.sp, fontWeight = FontWeight.Bold) }
-                Spacer(Modifier.height(12.dp))
-                Text(user.name, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text(user.email, color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
-                Spacer(Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    StatChip("${user.rating}★", "Rating")
-                    Spacer(Modifier.width(12.dp))
-                    StatChip("${user.tripsCompleted}", "Viajes")
-                    Spacer(Modifier.width(12.dp))
-                    StatChip("38kg", "CO₂ ahorrado")
+                Surface(color = MaterialTheme.colorScheme.primary, modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            Modifier.size(88.dp).background(Color.White, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) { Text(user.name.firstOrNull()?.toString().orEmpty(), color = MaterialTheme.colorScheme.primary, fontSize = 36.sp, fontWeight = FontWeight.Bold) }
+                        Spacer(Modifier.height(12.dp))
+                        Text(user.name, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text(user.email, color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
+                        Spacer(Modifier.height(12.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            StatChip("${user.rating}★", "Rating")
+                            Spacer(Modifier.width(12.dp))
+                            StatChip("${user.tripsCompleted}", "Viajes")
+                            Spacer(Modifier.width(12.dp))
+                            StatChip("38kg", "CO₂ ahorrado")
+                        }
+                    }
                 }
+
+                Column(Modifier.padding(20.dp)) {
+                    SectionTitle("Badges")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        user.badges.forEach { VerifiedBadge(it) }
+                    }
+                    Spacer(Modifier.height(20.dp))
+
+                    SectionTitle("Reseñas recibidas")
+                    if (reviews.isEmpty()) {
+                        Text("Aún no tienes reseñas", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                    } else {
+                        reviews.forEach { ReviewCard(it.author, it.rating, it.comment, it.date) }
+                    }
+
+                    Spacer(Modifier.height(28.dp))
+                    OutlinedButton(
+                        onClick = { auth.logout(onLogout) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.Logout, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Cerrar sesión")
+                    }
+                }
+                Spacer(Modifier.height(80.dp))
             }
         }
-
-        Column(Modifier.padding(20.dp)) {
-            SectionTitle("Badges")
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                user.badges.forEach { VerifiedBadge(it) }
-            }
-            Spacer(Modifier.height(20.dp))
-
-            SectionTitle("Reseñas recibidas")
-            MockData.reviews.forEach { ReviewCard(it.author, it.rating, it.comment, it.date) }
-        }
-        Spacer(Modifier.height(80.dp))
     }
 }
 

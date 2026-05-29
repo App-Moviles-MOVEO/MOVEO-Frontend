@@ -21,18 +21,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.data.CarpoolRoute
-import com.example.moveo_frontend.data.MockData
+import com.example.moveo_frontend.data.remote.dto.PublishRouteRequest
 import com.example.moveo_frontend.ui.components.RatingChip
+import com.example.moveo_frontend.ui.components.StateContainer
 import com.example.moveo_frontend.ui.components.VerifiedBadge
 import com.example.moveo_frontend.ui.components.WPButton
+import com.example.moveo_frontend.ui.viewmodel.CarpoolViewModel
+import com.example.moveo_frontend.ui.viewmodel.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CarpoolSearchScreen(onBack: () -> Unit, onPublish: () -> Unit) {
-    var onlyWomen by remember { mutableStateOf(false) }
-    var onlyVerified by remember { mutableStateOf(true) }
-    val routes = MockData.routes.filter { (!onlyWomen || it.onlyWomen) && (!onlyVerified || it.verified) }
+fun CarpoolSearchScreen(onBack: () -> Unit, onPublish: () -> Unit, onRouteClick: (String) -> Unit) {
+    val vm: CarpoolViewModel = viewModel()
+    val state by vm.routes.collectAsState()
+    val onlyWomen by vm.onlyWomen.collectAsState()
+    val onlyVerified by vm.onlyVerified.collectAsState()
 
     Scaffold(
         topBar = {
@@ -48,29 +53,39 @@ fun CarpoolSearchScreen(onBack: () -> Unit, onPublish: () -> Unit) {
             Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 1.dp) {
                 Column(Modifier.padding(16.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterToggle("Solo mujeres", onlyWomen) { onlyWomen = it }
-                        FilterToggle("Verificados", onlyVerified) { onlyVerified = it }
+                        FilterChip(selected = onlyWomen, onClick = { vm.setOnlyWomen(!onlyWomen) }, label = { Text("Solo mujeres") })
+                        FilterChip(selected = onlyVerified, onClick = { vm.setOnlyVerified(!onlyVerified) }, label = { Text("Verificados") })
                     }
                 }
             }
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(routes) { r -> RouteCard(r) }
+            StateContainer(state, onRetry = { vm.load() }) { routes ->
+                if (routes.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No hay rutas disponibles", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(routes) { r ->
+                            RouteCard(r) { onRouteClick(r.id) }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun FilterToggle(label: String, value: Boolean, onChange: (Boolean) -> Unit) {
-    FilterChip(selected = value, onClick = { onChange(!value) }, label = { Text(label) })
-}
-
-@Composable
-private fun RouteCard(r: CarpoolRoute) {
-    Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(14.dp), tonalElevation = 1.dp, modifier = Modifier.fillMaxWidth()) {
+private fun RouteCard(r: CarpoolRoute, onClick: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(14.dp),
+        tonalElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
+    ) {
         Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -130,6 +145,9 @@ private fun InfoChip(icon: androidx.compose.ui.graphics.vector.ImageVector, text
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CarpoolPublishScreen(onBack: () -> Unit, onPublished: () -> Unit) {
+    val vm: CarpoolViewModel = viewModel()
+    val state by vm.publish.collectAsState()
+
     var origin by remember { mutableStateOf("") }
     var destination by remember { mutableStateOf("") }
     var date by remember { mutableStateOf("Vie 9 may") }
@@ -138,6 +156,10 @@ fun CarpoolPublishScreen(onBack: () -> Unit, onPublished: () -> Unit) {
     var price by remember { mutableStateOf("6") }
     var recurring by remember { mutableStateOf(true) }
     val scroll = rememberScrollState()
+
+    LaunchedEffect(state) {
+        if (state is UiState.Success) onPublished()
+    }
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Publicar ruta") }, navigationIcon = {
@@ -155,8 +177,8 @@ fun CarpoolPublishScreen(onBack: () -> Unit, onPublished: () -> Unit) {
             }
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(value = seats, onValueChange = { seats = it }, label = { Text("Asientos") }, modifier = Modifier.weight(1f), singleLine = true)
-                OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Precio por asiento") }, modifier = Modifier.weight(1f), singleLine = true)
+                OutlinedTextField(value = seats, onValueChange = { seats = it.filter(Char::isDigit) }, label = { Text("Asientos") }, modifier = Modifier.weight(1f), singleLine = true)
+                OutlinedTextField(value = price, onValueChange = { price = it.filter(Char::isDigit) }, label = { Text("Precio por asiento") }, modifier = Modifier.weight(1f), singleLine = true)
             }
             Spacer(Modifier.height(16.dp))
             Row(
@@ -173,8 +195,28 @@ fun CarpoolPublishScreen(onBack: () -> Unit, onPublished: () -> Unit) {
                 }
                 Switch(checked = recurring, onCheckedChange = { recurring = it })
             }
+            if (state is UiState.Error) {
+                Spacer(Modifier.height(12.dp))
+                Text((state as UiState.Error).message, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+            }
             Spacer(Modifier.height(28.dp))
-            WPButton("Publicar ruta", onClick = onPublished, enabled = origin.isNotBlank() && destination.isNotBlank())
+            WPButton(
+                text = if (state is UiState.Loading) "Publicando..." else "Publicar ruta",
+                onClick = {
+                    vm.publishRoute(
+                        PublishRouteRequest(
+                            origin = origin,
+                            destination = destination,
+                            date = date,
+                            time = time,
+                            seats = seats.toIntOrNull() ?: 1,
+                            price = price.toIntOrNull() ?: 0,
+                            recurring = recurring
+                        )
+                    )
+                },
+                enabled = origin.isNotBlank() && destination.isNotBlank() && state !is UiState.Loading
+            )
         }
     }
 }
