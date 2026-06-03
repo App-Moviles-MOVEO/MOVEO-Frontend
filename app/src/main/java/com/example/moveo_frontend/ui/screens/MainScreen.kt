@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 fun MainScreen(
     onCatalog: () -> Unit,
     onCarpoolSearch: () -> Unit,
-    onPublishCarpool: () -> Unit,
     onCarpoolDetail: (String) -> Unit,
     onSafety: () -> Unit,
     onRewards: () -> Unit,
@@ -62,7 +61,6 @@ fun MainScreen(
                 1 -> CatalogScreen(onBack = { tab = 0 }, onVehicleClick = onVehicleClick)
                 2 -> CarpoolSearchScreen(
                     onBack = { tab = 0 },
-                    onPublish = onPublishCarpool,
                     onRouteClick = onCarpoolDetail
                 )
                 3 -> ReservationsScreen(onClick = onReservationClick)

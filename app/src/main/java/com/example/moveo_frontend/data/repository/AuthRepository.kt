@@ -19,7 +19,7 @@ class AuthRepository(
     private val session: SessionManager
 ) {
     suspend fun login(email: String, password: String): Result<User> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) {
             delay(500)
             session.save("mock_token", "u1", MockData.currentUser.name, email, MockData.currentUser.role.name)
             return@runCatching MockData.currentUser.copy(email = email)
@@ -32,7 +32,7 @@ class AuthRepository(
     suspend fun register(
         name: String, email: String, phone: String, password: String, role: String
     ): Result<User> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) {
             delay(600)
             session.save("mock_token", "u1", name, email, role)
             return@runCatching MockData.currentUser.copy(name = name, email = email)
@@ -43,12 +43,12 @@ class AuthRepository(
     }
 
     suspend fun forgotPassword(email: String): Result<Unit> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) { delay(400); return@runCatching }
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) { delay(400); return@runCatching }
         api.forgotPassword(ForgotPasswordRequest(email))
     }
 
     suspend fun me(): Result<User> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) {
             delay(300)
             return@runCatching MockData.currentUser
         }
@@ -56,7 +56,7 @@ class AuthRepository(
     }
 
     suspend fun uploadKyc(dniFront: File, dniBack: File, selfie: File): Result<String> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) { delay(800); return@runCatching "approved" }
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) { delay(800); return@runCatching "approved" }
         val media = "image/jpeg".toMediaTypeOrNull()
         api.uploadKyc(
             MultipartBody.Part.createFormData("dni_front", dniFront.name, dniFront.asRequestBody(media)),

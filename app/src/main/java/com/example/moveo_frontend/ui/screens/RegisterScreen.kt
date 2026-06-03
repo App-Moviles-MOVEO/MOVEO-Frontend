@@ -62,9 +62,7 @@ fun RegisterScreen(onBack: () -> Unit, onContinue: () -> Unit) {
             OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Contraseña") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
             Spacer(Modifier.height(20.dp))
 
-            Text("Elige tu rol", fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(10.dp))
-            RoleOption("Proveedor", "Publico mis vehículos", role == UserRole.PROVIDER) { role = UserRole.PROVIDER }
+            Text("¿Cómo vas a usar MOVEO?", fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(10.dp))
             RoleOption("Arrendatario", "Alquilo vehículos", role == UserRole.RENTER) { role = UserRole.RENTER }
             Spacer(Modifier.height(10.dp))

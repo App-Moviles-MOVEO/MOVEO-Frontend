@@ -11,14 +11,14 @@ import kotlinx.coroutines.delay
 
 class RentalRepository(private val api: RentalApi) {
     suspend fun vehicles(type: String? = null, query: String? = null): Result<List<Vehicle>> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_RENTAL)) {
             delay(400)
             return@runCatching if (type == null) MockData.vehicles else MockData.vehicles.filter { it.type == type }
         }
         api.list(type, query).map { it.toDomain() }
     }
     suspend fun vehicle(id: String): Result<Vehicle> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_RENTAL)) {
             delay(300)
             return@runCatching MockData.vehicles.firstOrNull { it.id == id }
                 ?: error("Vehículo no encontrado")
@@ -26,7 +26,7 @@ class RentalRepository(private val api: RentalApi) {
         api.detail(id).toDomain()
     }
     suspend fun publish(req: PublishVehicleRequest): Result<Vehicle> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_RENTAL)) {
             delay(700)
             return@runCatching Vehicle(
                 id = "v_new_${System.currentTimeMillis()}",
@@ -40,7 +40,7 @@ class RentalRepository(private val api: RentalApi) {
         api.publish(req).toDomain()
     }
     suspend fun reserve(vehicleId: String, startDate: String, endDate: String): Result<Reservation> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_RENTAL)) {
             delay(600)
             val v = MockData.vehicles.firstOrNull { it.id == vehicleId }
             return@runCatching Reservation(
@@ -53,14 +53,14 @@ class RentalRepository(private val api: RentalApi) {
         api.reserve(CreateReservationRequest(vehicleId, startDate, endDate)).toDomain()
     }
     suspend fun myReservations(): Result<List<Reservation>> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_RENTAL)) {
             delay(400)
             return@runCatching MockData.reservations
         }
         api.myReservations().map { it.toDomain() }
     }
     suspend fun reservation(id: String): Result<Reservation> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_RENTAL)) {
             delay(300)
             return@runCatching MockData.reservations.firstOrNull { it.id == id }
                 ?: error("Reserva no encontrada")

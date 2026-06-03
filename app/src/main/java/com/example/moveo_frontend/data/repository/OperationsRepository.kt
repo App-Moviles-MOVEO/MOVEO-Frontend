@@ -12,32 +12,32 @@ import kotlinx.coroutines.delay
 
 class OperationsRepository(private val api: OperationsApi) {
     suspend fun myReviews(): Result<List<Review>> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_OPERATIONS)) {
             delay(300)
             return@runCatching MockData.reviews
         }
         api.myReviews().map { it.toDomain() }
     }
     suspend fun submitReview(req: SubmitReviewRequest): Result<Unit> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) { delay(500); return@runCatching }
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_OPERATIONS)) { delay(500); return@runCatching }
         api.submitReview(req)
     }
     suspend fun notifications(): Result<List<NotificationDto>> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_OPERATIONS)) {
             delay(300)
             return@runCatching MockData.notifications
         }
         api.notifications()
     }
     suspend fun chat(peerId: String): Result<List<ChatMessageDto>> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_OPERATIONS)) {
             delay(300)
             return@runCatching MockData.chatWith(peerId)
         }
         api.chat(peerId)
     }
     suspend fun send(to: String, body: String): Result<ChatMessageDto> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_OPERATIONS)) {
             delay(200)
             return@runCatching ChatMessageDto(
                 id = "c_${System.currentTimeMillis()}",

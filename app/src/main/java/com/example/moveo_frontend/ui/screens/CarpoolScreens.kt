@@ -33,7 +33,7 @@ import com.example.moveo_frontend.ui.viewmodel.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CarpoolSearchScreen(onBack: () -> Unit, onPublish: () -> Unit, onRouteClick: (String) -> Unit) {
+fun CarpoolSearchScreen(onBack: () -> Unit, onRouteClick: (String) -> Unit) {
     val vm: CarpoolViewModel = viewModel()
     val state by vm.routes.collectAsState()
     val onlyWomen by vm.onlyWomen.collectAsState()
@@ -44,9 +44,6 @@ fun CarpoolSearchScreen(onBack: () -> Unit, onPublish: () -> Unit, onRouteClick:
             TopAppBar(title = { Text("Buscar ruta") }, navigationIcon = {
                 IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
             })
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(onClick = onPublish, icon = { Icon(Icons.Default.Add, null) }, text = { Text("Publicar ruta") })
         }
     ) { padding ->
         Column(Modifier.padding(padding)) {

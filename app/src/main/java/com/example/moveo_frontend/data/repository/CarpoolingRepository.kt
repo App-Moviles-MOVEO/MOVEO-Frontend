@@ -11,7 +11,7 @@ import kotlinx.coroutines.delay
 
 class CarpoolingRepository(private val api: CarpoolingApi) {
     suspend fun routes(onlyWomen: Boolean? = null, verified: Boolean? = null): Result<List<CarpoolRoute>> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_CARPOOLING)) {
             delay(400)
             return@runCatching MockData.routes.filter {
                 (onlyWomen != true || it.onlyWomen) && (verified != true || it.verified)
@@ -20,7 +20,7 @@ class CarpoolingRepository(private val api: CarpoolingApi) {
         api.list(onlyWomen, verified).map { it.toDomain() }
     }
     suspend fun route(id: String): Result<CarpoolRoute> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_CARPOOLING)) {
             delay(300)
             return@runCatching MockData.routes.firstOrNull { it.id == id }
                 ?: error("Ruta no encontrada")
@@ -28,7 +28,7 @@ class CarpoolingRepository(private val api: CarpoolingApi) {
         api.detail(id).toDomain()
     }
     suspend fun publish(req: PublishRouteRequest): Result<CarpoolRoute> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_CARPOOLING)) {
             delay(600)
             return@runCatching CarpoolRoute(
                 id = "r_new_${System.currentTimeMillis()}",
@@ -42,11 +42,11 @@ class CarpoolingRepository(private val api: CarpoolingApi) {
         api.publish(req).toDomain()
     }
     suspend fun book(routeId: String, seats: Int): Result<Unit> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) { delay(500); return@runCatching }
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_CARPOOLING)) { delay(500); return@runCatching }
         api.book(BookSeatRequest(routeId, seats))
     }
     suspend fun tracking(routeId: String): Result<List<TrackingPointDto>> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_CARPOOLING)) {
             delay(400)
             return@runCatching MockData.trackingPoints
         }

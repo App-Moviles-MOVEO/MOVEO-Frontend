@@ -10,14 +10,14 @@ import kotlinx.coroutines.delay
 
 class BillingRepository(private val api: BillingApi) {
     suspend fun methods(): Result<List<PaymentMethodDto>> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_BILLING)) {
             delay(200)
             return@runCatching MockData.paymentMethods
         }
         api.methods()
     }
     suspend fun pay(reservationId: String, method: String, amount: Int): Result<PaymentResponse> = runCatching {
-        if (BuildConfig.USE_MOCK_DATA) {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_BILLING)) {
             delay(900)
             return@runCatching PaymentResponse(
                 id = "pay_${System.currentTimeMillis()}",

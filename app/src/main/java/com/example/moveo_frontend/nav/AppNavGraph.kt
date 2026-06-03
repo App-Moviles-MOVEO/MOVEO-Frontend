@@ -56,7 +56,6 @@ fun AppNavGraph() {
             MainScreen(
                 onCatalog = { nav.navigate(Routes.CATALOG) },
                 onCarpoolSearch = { nav.navigate(Routes.CARPOOL_SEARCH) },
-                onPublishCarpool = { nav.navigate(Routes.CARPOOL_PUBLISH) },
                 onCarpoolDetail = { id -> nav.navigate(Routes.carpoolDetail(id)) },
                 onSafety = { nav.navigate(Routes.SAFETY) },
                 onRewards = { nav.navigate(Routes.REWARDS) },
@@ -72,12 +71,6 @@ fun AppNavGraph() {
             CatalogScreen(
                 onBack = { nav.popBackStack() },
                 onVehicleClick = { id -> nav.navigate(Routes.vehicleDetail(id)) }
-            )
-        }
-        composable(Routes.PUBLISH_VEHICLE) {
-            PublishVehicleScreen(
-                onBack = { nav.popBackStack() },
-                onPublished = { nav.popBackStack() }
             )
         }
         composable(
@@ -108,14 +101,7 @@ fun AppNavGraph() {
         composable(Routes.CARPOOL_SEARCH) {
             CarpoolSearchScreen(
                 onBack = { nav.popBackStack() },
-                onPublish = { nav.navigate(Routes.CARPOOL_PUBLISH) },
                 onRouteClick = { id -> nav.navigate(Routes.carpoolDetail(id)) }
-            )
-        }
-        composable(Routes.CARPOOL_PUBLISH) {
-            CarpoolPublishScreen(
-                onBack = { nav.popBackStack() },
-                onPublished = { nav.popBackStack() }
             )
         }
         composable(

@@ -17,7 +17,15 @@
       "Bash(dir \"c:\\\\Desarrollo\\\\cosas xd\\\\MOVEO-Frontend\\\\guia\")",
       "Bash(dir \"c:\\\\Desarrollo\\\\cosas xd\\\\MOVEO-Frontend\\\\app\")",
       "Bash(dir \"c:\\\\Desarrollo\\\\cosas xd\\\\MOVEO-Frontend\\\\app\\\\src\" /S /B)",
-      "Bash(./gradlew.bat clean *)"
+      "Bash(./gradlew.bat clean *)",
+      "Bash(./gradlew.bat tasks *)",
+      "Bash(JAVA_HOME=\"C:/Program Files/Java/jdk-21\" ./gradlew.bat assembleDebug --no-daemon)",
+      "Bash(./gradlew.bat --stop)",
+      "Bash(C:\\\\Users\\\\goku6\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe devices *)",
+      "Bash(C:\\\\Users\\\\goku6\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe *)",
+      "Bash(C:/Users/goku6/AppData/Local/Android/Sdk/platform-tools/adb.exe shell *)",
+      "Bash(C:/Users/goku6/AppData/Local/Android/Sdk/platform-tools/adb.exe install *)",
+      "Bash(C:/Users/goku6/AppData/Local/Android/Sdk/platform-tools/adb.exe exec-out *)"
     ]
   }
 }
