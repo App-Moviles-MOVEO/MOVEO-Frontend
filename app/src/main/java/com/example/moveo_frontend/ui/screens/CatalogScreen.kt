@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -22,22 +23,34 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.data.Vehicle
 import com.example.moveo_frontend.ui.components.RatingChip
 import com.example.moveo_frontend.ui.components.StateContainer
+import com.example.moveo_frontend.ui.components.VehicleThumb
 import com.example.moveo_frontend.ui.components.VerifiedBadge
 import com.example.moveo_frontend.ui.viewmodel.VehiclesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CatalogScreen(onBack: () -> Unit, onVehicleClick: (String) -> Unit) {
+fun CatalogScreen(onBack: () -> Unit, onVehicleClick: (String) -> Unit, onPublish: (() -> Unit)? = null) {
     val vm: VehiclesViewModel = viewModel()
     val state by vm.state.collectAsState()
     val filter by vm.filter.collectAsState()
     val filters = listOf("Todos", "Compacto", "Sedán", "SUV")
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text("Catálogo de vehículos") }, navigationIcon = {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-        }, actions = { IconButton(onClick = { vm.load() }) { Icon(Icons.Default.Search, null) } })
-    }) { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Catálogo de vehículos") }, navigationIcon = {
+                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+            }, actions = { IconButton(onClick = { vm.load() }) { Icon(Icons.Default.Search, null) } })
+        },
+        floatingActionButton = {
+            if (onPublish != null) {
+                ExtendedFloatingActionButton(
+                    onClick = onPublish,
+                    icon = { Icon(Icons.Default.Add, null) },
+                    text = { Text("Publicar auto") }
+                )
+            }
+        }
+    ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
@@ -80,12 +93,7 @@ private fun VehicleListItem(v: Vehicle, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
     ) {
         Row(Modifier.padding(12.dp)) {
-            Box(
-                Modifier
-                    .size(96.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(10.dp)),
-                contentAlignment = Alignment.Center
-            ) { Text(v.imageEmoji, fontSize = 50.sp) }
+            VehicleThumb(size = 96.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

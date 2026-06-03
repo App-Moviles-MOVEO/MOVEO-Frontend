@@ -1,9 +1,8 @@
 package com.example.moveo_frontend.data.remote.api
 
-import com.example.moveo_frontend.data.remote.dto.BookSeatRequest
-import com.example.moveo_frontend.data.remote.dto.CarpoolRouteDto
-import com.example.moveo_frontend.data.remote.dto.PublishRouteRequest
-import com.example.moveo_frontend.data.remote.dto.TrackingPointDto
+import com.example.moveo_frontend.data.remote.dto.AdventureRouteDto
+import com.example.moveo_frontend.data.remote.dto.BookSeatBody
+import com.example.moveo_frontend.data.remote.dto.CreateCarpoolRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -11,21 +10,18 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface CarpoolingApi {
-    @GET("routes")
+    @GET("adventure-routes")
     suspend fun list(
-        @Query("onlyWomen") onlyWomen: Boolean? = null,
-        @Query("verified") verified: Boolean? = null
-    ): List<CarpoolRouteDto>
+        @Query("type") type: String? = "carpool",
+        @Query("onlyWomen") onlyWomen: Boolean? = null
+    ): List<AdventureRouteDto>
 
-    @GET("routes/{id}")
-    suspend fun detail(@Path("id") id: String): CarpoolRouteDto
+    @GET("adventure-routes/{id}")
+    suspend fun detail(@Path("id") id: String): AdventureRouteDto
 
-    @POST("routes")
-    suspend fun publish(@Body req: PublishRouteRequest): CarpoolRouteDto
+    @POST("adventure-routes")
+    suspend fun publish(@Body req: CreateCarpoolRequest): AdventureRouteDto
 
-    @POST("routes/book")
-    suspend fun book(@Body req: BookSeatRequest)
-
-    @GET("routes/{id}/tracking")
-    suspend fun tracking(@Path("id") id: String): List<TrackingPointDto>
+    @POST("adventure-routes/{id}/book")
+    suspend fun book(@Path("id") id: String, @Body req: BookSeatBody): AdventureRouteDto
 }

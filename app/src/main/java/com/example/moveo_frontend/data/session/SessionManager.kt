@@ -28,7 +28,9 @@ class SessionManager(private val context: Context) {
 
     suspend fun tokenBlocking(): String? = context.sessionDataStore.data.first()[Keys.TOKEN]
 
-    suspend fun save(token: String, userId: String, name: String, email: String, role: String) {
+    suspend fun userIdBlocking(): String? = context.sessionDataStore.data.first()[Keys.USER_ID]
+
+    suspend fun save(userId: String, name: String, email: String, role: String, token: String = "") {
         context.sessionDataStore.edit {
             it[Keys.TOKEN] = token
             it[Keys.USER_ID] = userId

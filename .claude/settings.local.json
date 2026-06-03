@@ -25,7 +25,29 @@
       "Bash(C:\\\\Users\\\\goku6\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe *)",
       "Bash(C:/Users/goku6/AppData/Local/Android/Sdk/platform-tools/adb.exe shell *)",
       "Bash(C:/Users/goku6/AppData/Local/Android/Sdk/platform-tools/adb.exe install *)",
-      "Bash(C:/Users/goku6/AppData/Local/Android/Sdk/platform-tools/adb.exe exec-out *)"
+      "Bash(C:/Users/goku6/AppData/Local/Android/Sdk/platform-tools/adb.exe exec-out *)",
+      "Bash(cat .vscode/settings.json)",
+      "Bash(cat build.gradle)",
+      "Bash(cat build.gradle.kts)",
+      "Bash(JAVA_HOME=\"C:/Program Files/Java/jdk-21\" ./gradlew :app:compileDebugJavaWithJavac --console=plain)",
+      "Bash(JAVA_HOME=\"C:/Program Files/Java/jdk-21\" ./gradlew :app:compileDebugKotlin --console=plain)",
+      "WebSearch",
+      "Bash(JAVA_HOME=\"C:/Program Files/Java/jdk-21\" ./gradlew :app:assembleDebug --console=plain)",
+      "Bash(xargs grep -l \"data class User\\\\|data class Vehicle\\\\|data class Reservation\")",
+      "Bash(JAVA_HOME=\"C:/Program Files/Java/jdk-21\" ./gradlew --stop)",
+      "PowerShell($sdk = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\"; & \"$sdk\\\\platform-tools\\\\adb.exe\" devices; Write-Output \"=== AVDs ===\"; & \"$sdk\\\\emulator\\\\emulator.exe\" -list-avds)",
+      "PowerShell($sdk = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\"; Start-Process -FilePath \"$sdk\\\\emulator\\\\emulator.exe\" -ArgumentList \"-avd\",\"Medium_Phone_API_36.1\",\"-no-snapshot-load\" -WindowStyle Minimized; Write-Output \"Emulador arrancando...\")",
+      "PowerShell($sdk = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\"; $adb = \"$sdk\\\\platform-tools\\\\adb.exe\"; $apk = \"C:\\\\Desarrollo\\\\cosas xd\\\\MOVEO-Frontend\\\\app\\\\build\\\\outputs\\\\apk\\\\debug\\\\app-debug.apk\"; & $adb install -r $apk; Write-Output \"=== Lanzando ===\"; & $adb shell monkey -p com.example.moveo_frontend -c android.intent.category.LAUNCHER 1)",
+      "PowerShell(Out-Null *)",
+      "PowerShell($sdk = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\"; $adb = \"$sdk\\\\platform-tools\\\\adb.exe\"; \\(& $adb shell wm size\\); \\(& $adb shell wm density\\))",
+      "PowerShell(.\\\\gradlew.bat compileDebugKotlin --console=plain -q)",
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb devices; Write-Output \"---emulators---\"; $emu = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe\"; & $emu -list-avds)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:8080/api/v1/vehicles\" -UseBasicParsing -TimeoutSec 5; Write-Output \"BACKEND OK status=$\\($r.StatusCode\\)\"; Write-Output $r.Content.Substring\\(0,[Math]::Min\\(300,$r.Content.Length\\)\\) } catch { Write-Output \"BACKEND ERROR: $\\($_.Exception.Message\\)\" })",
+      "PowerShell($body = '{\"email\":\"rosa@moveo.com\",\"password\":\"password123\"}'; try { $r = Invoke-WebRequest -Uri \"http://localhost:8080/api/v1/auth/login\" -Method POST -Body $body -ContentType \"application/json\" -UseBasicParsing -TimeoutSec 5; Write-Output \"LOGIN status=$\\($r.StatusCode\\)\"; Write-Output $r.Content } catch { Write-Output \"LOGIN ERROR: $\\($_.Exception.Message\\)\"; if \\($_.Exception.Response\\) { $s = New-Object System.IO.StreamReader\\($_.Exception.Response.GetResponseStream\\(\\)\\); Write-Output $s.ReadToEnd\\(\\) } })",
+      "PowerShell($emu = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe\"; Start-Process -FilePath $emu -ArgumentList \"-avd\",\"Medium_Phone_API_36.1\",\"-netdelay\",\"none\",\"-netspeed\",\"full\" -WindowStyle Minimized; Write-Output \"Emulator launching...\")",
+      "PowerShell(.\\\\gradlew.bat assembleDebug --console=plain -q)",
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb wait-for-device; $boot=\"\"; $tries=0; while \\($boot.Trim\\(\\) -ne \"1\" -and $tries -lt 60\\) { Start-Sleep -Seconds 3; $boot = \\(& $adb shell getprop sys.boot_completed\\) -join \"\"; $tries++ }; Write-Output \"boot_completed=$\\($boot.Trim\\(\\)\\) after $tries tries\"; & $adb devices)",
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb install -r \".\\\\app\\\\build\\\\outputs\\\\apk\\\\debug\\\\app-debug.apk\"; Write-Output \"---launch---\"; & $adb shell monkey -p com.example.moveo_frontend -c android.intent.category.LAUNCHER 1)"
     ]
   }
 }

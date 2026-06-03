@@ -62,9 +62,50 @@ fun AppNavGraph() {
                 onNotifications = { nav.navigate(Routes.NOTIFICATIONS) },
                 onVehicleClick = { id -> nav.navigate(Routes.vehicleDetail(id)) },
                 onReservationClick = { id -> nav.navigate(Routes.reservationDetail(id)) },
+                onPublishVehicle = { nav.navigate(Routes.PUBLISH_VEHICLE) },
+                onPublishCarpool = { nav.navigate(Routes.CARPOOL_PUBLISH) },
+                onEditProfile = { nav.navigate(Routes.PROFILE_EDIT) },
+                onPaymentMethods = { nav.navigate(Routes.PAYMENT_METHODS) },
+                onMyListings = { nav.navigate(Routes.MY_LISTINGS) },
+                onSettings = { nav.navigate(Routes.SETTINGS) },
+                onHelp = { nav.navigate(Routes.HELP) },
                 onLogout = {
                     nav.navigate(Routes.WELCOME) { popUpTo(Routes.MAIN) { inclusive = true } }
                 }
+            )
+        }
+        composable(Routes.PROFILE_EDIT) {
+            EditProfileScreen(onBack = { nav.popBackStack() })
+        }
+        composable(Routes.PAYMENT_METHODS) {
+            PaymentMethodsScreen(onBack = { nav.popBackStack() })
+        }
+        composable(Routes.MY_LISTINGS) {
+            MyListingsScreen(
+                onBack = { nav.popBackStack() },
+                onPublishVehicle = { nav.navigate(Routes.PUBLISH_VEHICLE) },
+                onPublishCarpool = { nav.navigate(Routes.CARPOOL_PUBLISH) }
+            )
+        }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                onBack = { nav.popBackStack() },
+                onHelp = { nav.navigate(Routes.HELP) }
+            )
+        }
+        composable(Routes.HELP) {
+            HelpScreen(onBack = { nav.popBackStack() })
+        }
+        composable(Routes.PUBLISH_VEHICLE) {
+            PublishVehicleScreen(
+                onBack = { nav.popBackStack() },
+                onPublished = { nav.popBackStack() }
+            )
+        }
+        composable(Routes.CARPOOL_PUBLISH) {
+            CarpoolPublishScreen(
+                onBack = { nav.popBackStack() },
+                onPublished = { nav.popBackStack() }
             )
         }
         composable(Routes.CATALOG) {
@@ -112,8 +153,19 @@ fun AppNavGraph() {
             CarpoolDetailScreen(
                 id = id,
                 onBack = { nav.popBackStack() },
-                onBooked = { nav.popBackStack() },
+                onReserve = { routeId -> nav.navigate(Routes.carpoolConfirm(routeId)) },
                 onChat = { peer -> nav.navigate(Routes.chat(peer)) }
+            )
+        }
+        composable(
+            Routes.CARPOOL_CONFIRM,
+            arguments = listOf(navArgument("id") { type = NavType.StringType })
+        ) { entry ->
+            val id = entry.arguments?.getString("id").orEmpty()
+            CarpoolConfirmScreen(
+                id = id,
+                onBack = { nav.popBackStack() },
+                onDone = { nav.navigate(Routes.MAIN) { popUpTo(Routes.MAIN) { inclusive = true } } }
             )
         }
         composable(

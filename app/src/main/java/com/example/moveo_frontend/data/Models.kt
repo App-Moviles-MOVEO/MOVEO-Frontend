@@ -15,7 +15,9 @@ data class Vehicle(
     val seats: Int,
     val fuel: String,
     val description: String,
-    val imageEmoji: String = "🚗"
+    val imageEmoji: String = "🚗",
+    val ownerId: Int = 0,
+    val imageUrl: String? = null
 )
 
 data class CarpoolRoute(
@@ -61,4 +63,16 @@ data class Reservation(
     val endDate: String,
     val total: Int,
     val status: String // Confirmado, En curso, Finalizado
+)
+
+/** Asiento reservado en un viaje compartido (carpool). Aparece en "Mis reservas". */
+data class CarpoolBooking(
+    val routeId: String,
+    val origin: String,
+    val destination: String,
+    val date: String,
+    val departureTime: String,
+    val driverName: String,
+    val seats: Int,
+    val total: Int
 )

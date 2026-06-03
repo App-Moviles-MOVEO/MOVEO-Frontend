@@ -21,12 +21,12 @@ class AuthRepository(
     suspend fun login(email: String, password: String): Result<User> = runCatching {
         if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) {
             delay(500)
-            session.save("mock_token", "u1", MockData.currentUser.name, email, MockData.currentUser.role.name)
+            session.save("u1", MockData.currentUser.name, email, MockData.currentUser.role.name)
             return@runCatching MockData.currentUser.copy(email = email)
         }
-        val res = api.login(LoginRequest(email, password))
-        session.save(res.token, res.user.id, res.user.name, res.user.email, res.user.role)
-        res.user.toDomain()
+        val user = api.login(LoginRequest(email, password))
+        session.save(user.id.toString(), user.toDomain().name, user.email, user.role)
+        user.toDomain()
     }
 
     suspend fun register(
@@ -34,12 +34,19 @@ class AuthRepository(
     ): Result<User> = runCatching {
         if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) {
             delay(600)
-            session.save("mock_token", "u1", name, email, role)
+            session.save("u1", name, email, role)
             return@runCatching MockData.currentUser.copy(name = name, email = email)
         }
-        val res = api.register(RegisterRequest(name, email, phone, password, role))
-        session.save(res.token, res.user.id, res.user.name, res.user.email, res.user.role)
-        res.user.toDomain()
+        // El backend pide firstName/lastName por separado y role "renter"/"owner".
+        val trimmed = name.trim()
+        val firstName = trimmed.substringBefore(' ', trimmed)
+        val lastName = trimmed.substringAfter(' ', "")
+        val backendRole = if (role.equals("PROVIDER", ignoreCase = true)) "owner" else "renter"
+        val user = api.register(
+            RegisterRequest(firstName, lastName, email, password, phone.ifBlank { null }, backendRole)
+        )
+        session.save(user.id.toString(), user.toDomain().name, user.email, user.role)
+        user.toDomain()
     }
 
     suspend fun forgotPassword(email: String): Result<Unit> = runCatching {
@@ -52,7 +59,9 @@ class AuthRepository(
             delay(300)
             return@runCatching MockData.currentUser
         }
-        api.me().toDomain()
+        val userId = session.userIdBlocking()?.toIntOrNull()
+            ?: error("No hay sesión activa")
+        api.me(userId).toDomain()
     }
 
     suspend fun uploadKyc(dniFront: File, dniBack: File, selfie: File): Result<String> = runCatching {

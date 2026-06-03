@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -197,7 +198,12 @@ private fun NearbyCard(v: Vehicle, onClick: () -> Unit) {
                     .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(v.imageEmoji, fontSize = 44.sp)
+                Icon(
+                    Icons.Rounded.DirectionsCar,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(40.dp)
+                )
             }
             Spacer(Modifier.height(8.dp))
             Text("${v.brand} ${v.model}", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)

@@ -11,6 +11,10 @@ val localProperties = Properties().apply {
 }
 val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY", "")
 val baseUrl: String = localProperties.getProperty("BASE_URL", "http://10.0.2.2:8080/")
+// Stripe: la publishable key va en la app; la secret key SOLO se usa en modo demo sin backend.
+val stripePublishableKey: String = localProperties.getProperty("STRIPE_PUBLISHABLE_KEY", "")
+val stripeSecretKey: String = localProperties.getProperty("STRIPE_SECRET_KEY", "")
+val stripeCurrency: String = localProperties.getProperty("STRIPE_CURRENCY", "pen")
 // Bandera global (back-compat). Si vale true, fuerza mock en todos los modulos sin importar las banderas individuales.
 val useMockData: Boolean = localProperties.getProperty("USE_MOCK_DATA", "true").toBooleanStrict()
 // Banderas por modulo: permiten conectar al backend feature por feature.
@@ -41,6 +45,9 @@ android {
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
         buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
         buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
+        buildConfigField("String", "STRIPE_PUBLISHABLE_KEY", "\"$stripePublishableKey\"")
+        buildConfigField("String", "STRIPE_SECRET_KEY", "\"$stripeSecretKey\"")
+        buildConfigField("String", "STRIPE_CURRENCY", "\"$stripeCurrency\"")
         buildConfigField("Boolean", "USE_MOCK_DATA", "$useMockData")
         buildConfigField("Boolean", "USE_MOCK_AUTH", "$useMockAuth")
         buildConfigField("Boolean", "USE_MOCK_RENTAL", "$useMockRental")
@@ -92,6 +99,8 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)
     implementation(libs.play.services.location)
+
+    implementation(libs.stripe.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

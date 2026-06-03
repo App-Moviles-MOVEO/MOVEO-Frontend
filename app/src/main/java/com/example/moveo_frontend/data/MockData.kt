@@ -25,6 +25,16 @@ object MockData {
         Vehicle("v5", "Mazda", "CX-5", 2023, 200, 4.9, "David G.", true, "San Isidro, Lima", "SUV", "Automático", 5, "Gasolina", "SUV premium con todas las comodidades.", "🚙")
     )
 
+    // Publicaciones del propio usuario (lo que YO ofrezco).
+    val myVehicles = listOf(
+        Vehicle("mv1", "Suzuki", "Swift", 2022, 95, 4.8, "Tú", true, "Surco, Lima", "Compacto", "Mecánico", 5, "Gasolina", "Mi Swift, siempre limpio y mantenido al día.", "🚗"),
+        Vehicle("mv2", "Nissan", "Versa", 2023, 120, 5.0, "Tú", true, "Surco, Lima", "Sedán", "Automático", 5, "Gasolina", "Versa automático, cómodo y con bajo consumo.", "🚙")
+    )
+
+    val myRoutes = listOf(
+        CarpoolRoute("mr1", "Tú", 4.9, true, "Surco", "UPC Monterrico", "07:00", "L-V", 3, 8, "Suzuki Swift", "UPC")
+    )
+
     val routes = listOf(
         CarpoolRoute("r1", "Diego A.", 4.9, true, "Los Olivos", "UPC Villa", "07:15", "Vie 9 may", 2, 8, "Toyota Yaris", "UPC"),
         CarpoolRoute("r2", "María L.", 5.0, true, "San Juan de Lurigancho", "San Isidro", "06:30", "L-V", 3, 10, "Kia Picanto", "UPC", onlyWomen = true),

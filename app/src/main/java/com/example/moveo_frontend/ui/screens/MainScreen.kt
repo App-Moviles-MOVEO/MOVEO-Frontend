@@ -18,6 +18,13 @@ fun MainScreen(
     onNotifications: () -> Unit,
     onVehicleClick: (String) -> Unit,
     onReservationClick: (String) -> Unit,
+    onPublishVehicle: () -> Unit,
+    onPublishCarpool: () -> Unit,
+    onEditProfile: () -> Unit,
+    onPaymentMethods: () -> Unit,
+    onMyListings: () -> Unit,
+    onSettings: () -> Unit,
+    onHelp: () -> Unit,
     onLogout: () -> Unit
 ) {
     var tab by remember { mutableStateOf(0) }
@@ -58,13 +65,21 @@ fun MainScreen(
         Box(Modifier.padding(padding)) {
             when (tab) {
                 0 -> HomeScreen(onCatalog, onCarpoolSearch, onSafety, onRewards, onNotifications, onVehicleClick)
-                1 -> CatalogScreen(onBack = { tab = 0 }, onVehicleClick = onVehicleClick)
+                1 -> CatalogScreen(onBack = { tab = 0 }, onVehicleClick = onVehicleClick, onPublish = onPublishVehicle)
                 2 -> CarpoolSearchScreen(
                     onBack = { tab = 0 },
-                    onRouteClick = onCarpoolDetail
+                    onRouteClick = onCarpoolDetail,
+                    onPublish = onPublishCarpool
                 )
                 3 -> ReservationsScreen(onClick = onReservationClick)
-                4 -> ProfileScreen(onLogout = onLogout)
+                4 -> ProfileScreen(
+                    onLogout = onLogout,
+                    onEditProfile = onEditProfile,
+                    onPaymentMethods = onPaymentMethods,
+                    onMyListings = onMyListings,
+                    onSettings = onSettings,
+                    onHelp = onHelp
+                )
             }
         }
     }

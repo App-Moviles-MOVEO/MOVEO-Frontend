@@ -6,14 +6,22 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,7 +33,14 @@ import com.example.moveo_frontend.ui.viewmodel.AuthViewModel
 import com.example.moveo_frontend.ui.viewmodel.ProfileViewModel
 
 @Composable
-fun ProfileScreen(onLogout: () -> Unit) {
+fun ProfileScreen(
+    onLogout: () -> Unit,
+    onEditProfile: () -> Unit = {},
+    onPaymentMethods: () -> Unit = {},
+    onMyListings: () -> Unit = {},
+    onSettings: () -> Unit = {},
+    onHelp: () -> Unit = {}
+) {
     val vm: ProfileViewModel = viewModel()
     val auth: AuthViewModel = viewModel()
     val state by vm.user.collectAsState()
@@ -77,6 +92,14 @@ fun ProfileScreen(onLogout: () -> Unit) {
                         reviews.forEach { ReviewCard(it.author, it.rating, it.comment, it.date) }
                     }
 
+                    Spacer(Modifier.height(24.dp))
+                    SectionTitle("Mi cuenta")
+                    ProfileMenuItem(Icons.Default.Edit, "Editar perfil", onEditProfile)
+                    ProfileMenuItem(Icons.Default.CreditCard, "Métodos de pago", onPaymentMethods)
+                    ProfileMenuItem(Icons.Default.Inventory2, "Mis publicaciones", onMyListings)
+                    ProfileMenuItem(Icons.Default.Settings, "Configuración", onSettings)
+                    ProfileMenuItem(Icons.AutoMirrored.Filled.HelpOutline, "Ayuda y soporte", onHelp)
+
                     Spacer(Modifier.height(28.dp))
                     OutlinedButton(
                         onClick = { auth.logout(onLogout) },
@@ -91,6 +114,19 @@ fun ProfileScreen(onLogout: () -> Unit) {
                 Spacer(Modifier.height(80.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun ProfileMenuItem(icon: ImageVector, title: String, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.width(14.dp))
+        Text(title, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

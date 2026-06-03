@@ -39,12 +39,10 @@ import com.google.maps.android.compose.rememberCameraPositionState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CarpoolDetailScreen(id: String, onBack: () -> Unit, onBooked: () -> Unit, onChat: (String) -> Unit) {
+fun CarpoolDetailScreen(id: String, onBack: () -> Unit, onReserve: (String) -> Unit, onChat: (String) -> Unit) {
     val vm: CarpoolViewModel = viewModel()
     val state by vm.detail.collectAsState()
-    val bookState by vm.book.collectAsState()
     LaunchedEffect(id) { vm.loadDetail(id) }
-    LaunchedEffect(bookState) { if (bookState is UiState.Success) onBooked() }
 
     val lima = LatLng(-12.0464, -77.0428)
     val cameraPositionState = rememberCameraPositionState {
@@ -108,18 +106,13 @@ fun CarpoolDetailScreen(id: String, onBack: () -> Unit, onBooked: () -> Unit, on
                                     Text("S/ ${r.pricePerSeat}", fontWeight = FontWeight.Bold, fontSize = 22.sp, color = MaterialTheme.colorScheme.primary)
                                 }
                             }
-                            if (bookState is UiState.Error) {
-                                Spacer(Modifier.height(12.dp))
-                                Text((bookState as UiState.Error).message, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
-                            }
                         }
                     }
                     Surface(tonalElevation = 4.dp) {
                         Row(Modifier.padding(16.dp)) {
                             WPButton(
-                                text = if (bookState is UiState.Loading) "Reservando..." else "Reservar asiento",
-                                enabled = bookState !is UiState.Loading,
-                                onClick = { vm.book(r.id, 1) }
+                                text = "Reservar asiento",
+                                onClick = { onReserve(r.id) }
                             )
                         }
                     }

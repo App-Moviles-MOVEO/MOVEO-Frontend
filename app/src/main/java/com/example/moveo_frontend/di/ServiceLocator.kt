@@ -26,8 +26,8 @@ object ServiceLocator {
     fun init(context: Context) {
         session = SessionManager(context.applicationContext)
         authRepo = AuthRepository(ApiClient.authApi(session), session)
-        rentalRepo = RentalRepository(ApiClient.rentalApi(session))
-        carpoolingRepo = CarpoolingRepository(ApiClient.carpoolingApi(session))
+        rentalRepo = RentalRepository(ApiClient.rentalApi(session), session)
+        carpoolingRepo = CarpoolingRepository(ApiClient.carpoolingApi(session), session)
         billingRepo = BillingRepository(ApiClient.billingApi(session))
         operationsRepo = OperationsRepository(ApiClient.operationsApi(session))
     }

@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.moveo_frontend.di.ServiceLocator
+import com.example.moveo_frontend.ui.components.BrandMark
 import com.example.moveo_frontend.ui.theme.BlueAccent
 import com.example.moveo_frontend.ui.theme.BluePrimary
 import kotlinx.coroutines.flow.first
@@ -29,8 +30,9 @@ import kotlinx.coroutines.flow.first
 @Composable
 fun SplashScreen(onAuthed: () -> Unit, onUnauthed: () -> Unit) {
     LaunchedEffect(Unit) {
-        val token = ServiceLocator.session.token.first()
-        if (!token.isNullOrBlank()) onAuthed() else onUnauthed()
+        // La sesión MOVEO es stateless: se identifica por el userId guardado, no por un token.
+        val userId = ServiceLocator.session.userId.first()
+        if (!userId.isNullOrBlank()) onAuthed() else onUnauthed()
     }
     Box(
         modifier = Modifier
@@ -42,14 +44,7 @@ fun SplashScreen(onAuthed: () -> Unit, onUnauthed: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Box(
-                Modifier
-                    .size(120.dp)
-                    .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(28.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("🚗", fontSize = 64.sp)
-            }
+            BrandMark(size = 104.dp, background = Color.White, monogramColor = BluePrimary)
             Spacer(Modifier.height(20.dp))
             Text("WheelsPe", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(24.dp))

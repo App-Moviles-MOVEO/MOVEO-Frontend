@@ -25,6 +25,9 @@ object Routes {
     const val CARPOOL_DETAIL = "carpool/{id}"
     fun carpoolDetail(id: String) = "carpool/$id"
 
+    const val CARPOOL_CONFIRM = "carpool_confirm/{id}"
+    fun carpoolConfirm(id: String) = "carpool_confirm/$id"
+
     const val RESERVATION_DETAIL = "reservation/{id}"
     fun reservationDetail(id: String) = "reservation/$id"
 
@@ -47,4 +50,11 @@ object Routes {
     const val REWARDS = "rewards"
     const val SAFETY = "safety"
     const val RESERVATIONS = "reservations"
+
+    // Secciones del perfil
+    const val PROFILE_EDIT = "profile_edit"
+    const val PAYMENT_METHODS = "payment_methods"
+    const val MY_LISTINGS = "my_listings"
+    const val SETTINGS = "settings"
+    const val HELP = "help"
 }

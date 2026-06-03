@@ -62,10 +62,10 @@ class CarpoolViewModel : ViewModel() {
         }
     }
 
-    fun book(routeId: String, seats: Int = 1) {
+    fun book(route: CarpoolRoute, seats: Int = 1) {
         _book.value = UiState.Loading
         viewModelScope.launch {
-            repo.book(routeId, seats)
+            repo.book(route, seats)
                 .onSuccess { _book.value = UiState.Success(Unit) }
                 .onFailure { _book.value = UiState.Error(it.friendly()) }
         }

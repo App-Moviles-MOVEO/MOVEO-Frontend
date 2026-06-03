@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.moveo_frontend.ui.components.BrandMark
 import com.example.moveo_frontend.ui.components.WPButton
 import com.example.moveo_frontend.ui.components.WPOutlinedButton
 import com.example.moveo_frontend.ui.theme.BlueAccent
@@ -27,14 +28,11 @@ fun WelcomeScreen(onLogin: () -> Unit, onRegister: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(80.dp))
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .background(androidx.compose.ui.graphics.Color.White.copy(alpha = 0.15f), RoundedCornerShape(28.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("🚗", fontSize = 64.sp)
-        }
+        BrandMark(
+            size = 112.dp,
+            background = androidx.compose.ui.graphics.Color.White,
+            monogramColor = BluePrimary
+        )
         Spacer(Modifier.height(28.dp))
         Text(
             "WheelsPe",

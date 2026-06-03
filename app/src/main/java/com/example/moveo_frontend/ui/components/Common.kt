@@ -7,12 +7,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.rounded.AltRoute
+import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -76,6 +80,61 @@ fun VerifiedBadge(text: String = "Verificado") {
         Text(text, fontSize = 11.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
     }
 }
+
+/**
+ * Marca minimalista de WheelsPe: monograma "W" en una baldosa redondeada.
+ * Sustituye al emoji de carro. Por defecto baldosa blanca con la "W" en azul de marca.
+ */
+@Composable
+fun BrandMark(
+    modifier: Modifier = Modifier,
+    size: Dp = 56.dp,
+    background: Color = Color.White,
+    monogramColor: Color = MaterialTheme.colorScheme.primary
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .background(background, RoundedCornerShape(size * 0.28f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            "W",
+            color = monogramColor,
+            fontSize = (size.value * 0.52f).sp,
+            fontWeight = FontWeight.Black
+        )
+    }
+}
+
+/** Miniatura limpia para tarjetas: icono line-style dentro de una baldosa tintada (sin emojis). */
+@Composable
+fun IconThumb(
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    size: Dp = 56.dp,
+    container: Color = MaterialTheme.colorScheme.primaryContainer,
+    tint: Color = MaterialTheme.colorScheme.primary
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .background(container, RoundedCornerShape(size * 0.22f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, null, tint = tint, modifier = Modifier.size(size * 0.5f))
+    }
+}
+
+/** Miniatura de vehículo (auto). */
+@Composable
+fun VehicleThumb(modifier: Modifier = Modifier, size: Dp = 56.dp) =
+    IconThumb(Icons.Rounded.DirectionsCar, modifier, size)
+
+/** Miniatura de viaje compartido (carpool). */
+@Composable
+fun CarpoolThumb(modifier: Modifier = Modifier, size: Dp = 56.dp) =
+    IconThumb(Icons.Rounded.AltRoute, modifier, size)
 
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
