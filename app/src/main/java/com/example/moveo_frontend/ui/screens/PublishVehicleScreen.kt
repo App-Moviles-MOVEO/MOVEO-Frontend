@@ -5,8 +5,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -15,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.data.remote.dto.PublishVehicleRequest
+import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.WPButton
 import com.example.moveo_frontend.ui.viewmodel.PublishVehicleViewModel
 import com.example.moveo_frontend.ui.viewmodel.UiState
@@ -43,7 +42,7 @@ fun PublishVehicleScreen(onBack: () -> Unit, onPublished: () -> Unit) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Publicar vehículo") }, navigationIcon = {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+            WPBackButton(onClick = onBack)
         })
     }) { padding ->
         Column(Modifier.padding(padding).padding(20.dp).verticalScroll(scroll)) {

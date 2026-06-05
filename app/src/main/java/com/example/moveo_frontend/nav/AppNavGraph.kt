@@ -1,27 +1,21 @@
 package com.example.moveo_frontend.nav
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.moveo_frontend.di.ServiceLocator
 import com.example.moveo_frontend.ui.screens.*
+import kotlinx.coroutines.launch
 
 @Composable
-fun AppNavGraph() {
+fun AppNavGraph(startDestination: String = Routes.WELCOME) {
     val nav = rememberNavController()
-    NavHost(navController = nav, startDestination = Routes.SPLASH) {
-        composable(Routes.SPLASH) {
-            SplashScreen(
-                onAuthed = {
-                    nav.navigate(Routes.MAIN) { popUpTo(Routes.SPLASH) { inclusive = true } }
-                },
-                onUnauthed = {
-                    nav.navigate(Routes.WELCOME) { popUpTo(Routes.SPLASH) { inclusive = true } }
-                }
-            )
-        }
+    val scope = rememberCoroutineScope()
+    NavHost(navController = nav, startDestination = startDestination) {
         composable(Routes.WELCOME) {
             WelcomeScreen(
                 onLogin = { nav.navigate(Routes.LOGIN) },
@@ -48,9 +42,15 @@ fun AppNavGraph() {
             )
         }
         composable(Routes.KYC) {
-            KycScreen(onFinish = {
-                nav.navigate(Routes.MAIN) { popUpTo(Routes.WELCOME) { inclusive = true } }
-            })
+            KycScreen(
+                onBack = {
+                    nav.navigate(Routes.WELCOME) { popUpTo(0) { inclusive = true } }
+                },
+                onFinish = {
+                    scope.launch { ServiceLocator.session.setKycCompleted() }
+                    nav.navigate(Routes.MAIN) { popUpTo(0) { inclusive = true } }
+                }
+            )
         }
         composable(Routes.MAIN) {
             MainScreen(

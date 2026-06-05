@@ -101,6 +101,7 @@ dependencies {
     implementation(libs.play.services.location)
 
     implementation(libs.stripe.android)
+    implementation(libs.compose.ui.text.google.fonts)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

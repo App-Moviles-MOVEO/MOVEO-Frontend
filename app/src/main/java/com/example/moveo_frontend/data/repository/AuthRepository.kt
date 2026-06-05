@@ -34,7 +34,7 @@ class AuthRepository(
     ): Result<User> = runCatching {
         if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) {
             delay(600)
-            session.save("u1", name, email, role)
+            session.save("u1", name, email, role, kycCompleted = false)
             return@runCatching MockData.currentUser.copy(name = name, email = email)
         }
         // El backend pide firstName/lastName por separado y role "renter"/"owner".
@@ -45,7 +45,7 @@ class AuthRepository(
         val user = api.register(
             RegisterRequest(firstName, lastName, email, password, phone.ifBlank { null }, backendRole)
         )
-        session.save(user.id.toString(), user.toDomain().name, user.email, user.role)
+        session.save(user.id.toString(), user.toDomain().name, user.email, user.role, kycCompleted = false)
         user.toDomain()
     }
 

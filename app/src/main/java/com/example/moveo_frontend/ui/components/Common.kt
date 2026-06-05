@@ -1,7 +1,9 @@
 package com.example.moveo_frontend.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -14,11 +16,40 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+@Composable
+fun WPBackButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .background(Color.White, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.size(20.dp)) {
+            val sc = size.width / 20f
+            val path = Path().apply {
+                moveTo(12.5f * sc, 5f * sc)
+                lineTo(7.5f * sc, 10f * sc)
+                lineTo(12.5f * sc, 15f * sc)
+            }
+            drawPath(
+                path, Color.Black,
+                style = Stroke(1.6f * sc, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            )
+        }
+    }
+}
 
 @Composable
 fun WPButton(
@@ -90,7 +121,9 @@ fun BrandMark(
     modifier: Modifier = Modifier,
     size: Dp = 56.dp,
     background: Color = Color.White,
-    monogramColor: Color = MaterialTheme.colorScheme.primary
+    monogramColor: Color = MaterialTheme.colorScheme.primary,
+    fontFamily: FontFamily = FontFamily.Default,
+    fontWeight: FontWeight = FontWeight.Black
 ) {
     Box(
         modifier = modifier
@@ -102,7 +135,8 @@ fun BrandMark(
             "W",
             color = monogramColor,
             fontSize = (size.value * 0.52f).sp,
-            fontWeight = FontWeight.Black
+            fontWeight = fontWeight,
+            fontFamily = fontFamily
         )
     }
 }

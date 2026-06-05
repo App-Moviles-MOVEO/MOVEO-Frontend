@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.data.CarpoolRoute
 import com.example.moveo_frontend.data.remote.dto.PublishRouteRequest
+import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.RatingChip
 import com.example.moveo_frontend.ui.components.StateContainer
 import com.example.moveo_frontend.ui.components.VerifiedBadge
@@ -42,7 +42,7 @@ fun CarpoolSearchScreen(onBack: () -> Unit, onRouteClick: (String) -> Unit, onPu
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Buscar ruta") }, navigationIcon = {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                WPBackButton(onClick = onBack)
             })
         },
         floatingActionButton = {
@@ -169,7 +169,7 @@ fun CarpoolPublishScreen(onBack: () -> Unit, onPublished: () -> Unit) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Publicar ruta") }, navigationIcon = {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+            WPBackButton(onClick = onBack)
         })
     }) { padding ->
         Column(Modifier.padding(padding).padding(20.dp).verticalScroll(scroll)) {

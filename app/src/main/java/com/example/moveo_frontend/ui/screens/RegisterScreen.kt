@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.data.UserRole
+import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.WPButton
 import com.example.moveo_frontend.ui.viewmodel.AuthViewModel
 import com.example.moveo_frontend.ui.viewmodel.UiState
@@ -41,7 +40,7 @@ fun RegisterScreen(onBack: () -> Unit, onContinue: () -> Unit) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Crear cuenta") }, navigationIcon = {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+            WPBackButton(onClick = onBack)
         })
     }) { padding ->
         Column(

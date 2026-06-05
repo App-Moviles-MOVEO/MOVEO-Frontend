@@ -5,7 +5,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Delete
@@ -18,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.StateContainer
 import com.example.moveo_frontend.ui.viewmodel.PaymentMethodsViewModel
 
@@ -31,7 +31,7 @@ fun PaymentMethodsScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Métodos de pago") }, navigationIcon = {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                WPBackButton(onClick = onBack)
             })
         },
         floatingActionButton = {

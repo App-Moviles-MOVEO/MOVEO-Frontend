@@ -2,6 +2,7 @@ package com.example.moveo_frontend.data.session
 
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -18,6 +19,7 @@ class SessionManager(private val context: Context) {
         val USER_NAME = stringPreferencesKey("user_name")
         val USER_EMAIL = stringPreferencesKey("user_email")
         val USER_ROLE = stringPreferencesKey("user_role")
+        val KYC_COMPLETED = booleanPreferencesKey("kyc_completed")
     }
 
     val token: Flow<String?> = context.sessionDataStore.data.map { it[Keys.TOKEN] }
@@ -25,18 +27,24 @@ class SessionManager(private val context: Context) {
     val userName: Flow<String?> = context.sessionDataStore.data.map { it[Keys.USER_NAME] }
     val userEmail: Flow<String?> = context.sessionDataStore.data.map { it[Keys.USER_EMAIL] }
     val userRole: Flow<String?> = context.sessionDataStore.data.map { it[Keys.USER_ROLE] }
+    val kycCompleted: Flow<Boolean> = context.sessionDataStore.data.map { it[Keys.KYC_COMPLETED] ?: false }
 
     suspend fun tokenBlocking(): String? = context.sessionDataStore.data.first()[Keys.TOKEN]
-
     suspend fun userIdBlocking(): String? = context.sessionDataStore.data.first()[Keys.USER_ID]
+    suspend fun kycCompletedBlocking(): Boolean = context.sessionDataStore.data.first()[Keys.KYC_COMPLETED] ?: false
 
-    suspend fun save(userId: String, name: String, email: String, role: String, token: String = "") {
+    suspend fun setKycCompleted() {
+        context.sessionDataStore.edit { it[Keys.KYC_COMPLETED] = true }
+    }
+
+    suspend fun save(userId: String, name: String, email: String, role: String, token: String = "", kycCompleted: Boolean = true) {
         context.sessionDataStore.edit {
             it[Keys.TOKEN] = token
             it[Keys.USER_ID] = userId
             it[Keys.USER_NAME] = name
             it[Keys.USER_EMAIL] = email
             it[Keys.USER_ROLE] = role
+            it[Keys.KYC_COMPLETED] = kycCompleted
         }
     }
 

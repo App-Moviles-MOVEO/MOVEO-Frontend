@@ -1,8 +1,6 @@
 package com.example.moveo_frontend.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -10,6 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.WPButton
 import com.example.moveo_frontend.ui.viewmodel.AuthViewModel
 import com.example.moveo_frontend.ui.viewmodel.UiState
@@ -23,7 +22,7 @@ fun ForgotPasswordScreen(onBack: () -> Unit) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Recuperar contraseña") }, navigationIcon = {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+            WPBackButton(onClick = onBack)
         })
     }) { padding ->
         Column(Modifier.padding(padding).padding(24.dp)) {

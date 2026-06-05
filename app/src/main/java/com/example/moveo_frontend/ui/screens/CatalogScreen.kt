@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
@@ -21,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.data.Vehicle
+import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.RatingChip
 import com.example.moveo_frontend.ui.components.StateContainer
 import com.example.moveo_frontend.ui.components.VehicleThumb
@@ -38,7 +38,7 @@ fun CatalogScreen(onBack: () -> Unit, onVehicleClick: (String) -> Unit, onPublis
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Catálogo de vehículos") }, navigationIcon = {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                WPBackButton(onClick = onBack)
             }, actions = { IconButton(onClick = { vm.load() }) { Icon(Icons.Default.Search, null) } })
         },
         floatingActionButton = {
