@@ -29,16 +29,16 @@ import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.RatingChip
 import com.example.moveo_frontend.ui.components.StateContainer
 import com.example.moveo_frontend.ui.components.VerifiedBadge
+import com.example.moveo_frontend.ui.theme.BlueAccent
+import com.example.moveo_frontend.ui.theme.GrayBackground
+import com.example.moveo_frontend.ui.theme.GraySurface
 import com.example.moveo_frontend.ui.theme.ManropeFontFamily
+import com.example.moveo_frontend.ui.theme.TextDark
+import com.example.moveo_frontend.ui.theme.TextMuted
 import com.example.moveo_frontend.ui.viewmodel.VehicleDetailViewModel
 import kotlin.math.cos
 import kotlin.math.sin
 
-private val VdBackground  = Color(0xFFF6F6F6)
-private val VdWhite       = Color(0xFFFFFFFF)
-private val VdBlack       = Color(0xFF000000)
-private val VdMuted       = VdBlack.copy(alpha = 0.62f)
-private val VdBlue        = Color(0xFF3B82F6)
 private val VdDeposit     = 200
 
 @Composable
@@ -55,7 +55,7 @@ fun VehicleDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(VdBackground)
+            .background(GrayBackground)
     ) {
         StateContainer(state, onRetry = { vm.load(id) }) { v ->
             val scroll = rememberScrollState()
@@ -69,13 +69,11 @@ fun VehicleDetailScreen(
                         .weight(1f)
                         .verticalScroll(scroll)
                 ) {
-                    // Photo section
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(280.dp)
                     ) {
-                        // Photo placeholder
                         Box(
                             modifier = Modifier.fillMaxSize().background(Color(0xFFE8E8E8)),
                             contentAlignment = Alignment.Center
@@ -88,7 +86,6 @@ fun VehicleDetailScreen(
                             )
                         }
 
-                        // Back + Fav buttons row
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -96,14 +93,12 @@ fun VehicleDetailScreen(
                                 .padding(horizontal = 16.dp, vertical = 16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            // Back button
                             WPBackButton(onClick = onBack)
 
-                            // Favorite button
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)
-                                    .background(VdWhite, RoundedCornerShape(12.dp))
+                                    .background(GraySurface, RoundedCornerShape(12.dp))
                                     .clickable { isFav = !isFav },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -126,14 +121,13 @@ fun VehicleDetailScreen(
                                     path.close()
                                     drawPath(
                                         path,
-                                        if (isFav) VdBlue else VdBlack,
+                                        if (isFav) BlueAccent else TextDark,
                                         style = Stroke(sw, cap = StrokeCap.Round, join = StrokeJoin.Round)
                                     )
                                 }
                             }
                         }
 
-                        // Dots indicator
                         Row(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
@@ -148,7 +142,7 @@ fun VehicleDetailScreen(
                                         .width(w)
                                         .height(6.dp)
                                         .background(
-                                            if (i == currentPhoto) VdBlue else VdWhite,
+                                            if (i == currentPhoto) BlueAccent else GraySurface,
                                             RoundedCornerShape(3.dp)
                                         )
                                 )
@@ -156,23 +150,20 @@ fun VehicleDetailScreen(
                         }
                     }
 
-                    // Content
                     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                         Spacer(Modifier.height(20.dp))
 
-                        // Title + Price row
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.Top
                         ) {
-                            // Left: title + subtitle
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "${v.brand} ${v.model}",
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     fontFamily = ManropeFontFamily,
-                                    color = VdBlack,
+                                    color = TextDark,
                                     letterSpacing = (-0.72).sp
                                 )
                                 Spacer(Modifier.height(2.dp))
@@ -181,13 +172,12 @@ fun VehicleDetailScreen(
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Normal,
                                     fontFamily = ManropeFontFamily,
-                                    color = VdMuted
+                                    color = TextMuted
                                 )
                             }
 
                             Spacer(Modifier.width(12.dp))
 
-                            // Right: price + guarantee
                             Column(horizontalAlignment = Alignment.End) {
                                 Row(verticalAlignment = Alignment.Bottom) {
                                     Text(
@@ -195,7 +185,7 @@ fun VehicleDetailScreen(
                                         fontSize = 24.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         fontFamily = ManropeFontFamily,
-                                        color = VdBlack,
+                                        color = TextDark,
                                         letterSpacing = (-0.72).sp
                                     )
                                     Spacer(Modifier.width(2.dp))
@@ -204,7 +194,7 @@ fun VehicleDetailScreen(
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Normal,
                                         fontFamily = ManropeFontFamily,
-                                        color = VdMuted,
+                                        color = TextMuted,
                                         modifier = Modifier.padding(bottom = 2.dp)
                                     )
                                 }
@@ -213,19 +203,18 @@ fun VehicleDetailScreen(
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Normal,
                                     fontFamily = ManropeFontFamily,
-                                    color = VdMuted
+                                    color = TextMuted
                                 )
                             }
                         }
 
                         Spacer(Modifier.height(16.dp))
 
-                        // Specs — tarjeta blanca
                         Row(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(VdWhite, RoundedCornerShape(12.dp))
+                                .background(GraySurface, RoundedCornerShape(12.dp))
                                 .padding(vertical = 16.dp)
                         ) {
                             Spec(Icons.Default.AirlineSeatReclineNormal, "${v.seats} plazas")
@@ -236,18 +225,17 @@ fun VehicleDetailScreen(
 
                         Spacer(Modifier.height(16.dp))
 
-                        // Owner
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(VdWhite, RoundedCornerShape(12.dp))
+                                .background(GraySurface, RoundedCornerShape(12.dp))
                                 .padding(12.dp)
                         ) {
                             Box(
                                 Modifier
                                     .size(44.dp)
-                                    .background(VdBlue, CircleShape),
+                                    .background(BlueAccent, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -267,12 +255,12 @@ fun VehicleDetailScreen(
                                 Text(
                                     "Propietario · ${v.rating} ★",
                                     fontSize = 12.sp,
-                                    color = VdMuted,
+                                    color = TextMuted,
                                     fontFamily = ManropeFontFamily
                                 )
                             }
                             IconButton(onClick = { onChat(v.ownerId.toString()) }) {
-                                Icon(Icons.Default.Chat, null, tint = VdBlack)
+                                Icon(Icons.Default.Chat, null, tint = TextDark)
                             }
                         }
 
@@ -283,13 +271,13 @@ fun VehicleDetailScreen(
                             fontWeight = FontWeight.Bold,
                             fontFamily = ManropeFontFamily,
                             fontSize = 16.sp,
-                            color = VdBlack
+                            color = TextDark
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
                             v.description,
                             lineHeight = 20.sp,
-                            color = VdMuted,
+                            color = TextMuted,
                             fontFamily = ManropeFontFamily,
                             fontSize = 14.sp
                         )
@@ -298,7 +286,7 @@ fun VehicleDetailScreen(
 
                         Surface(color = Color(0xFFEEF4FF), shape = RoundedCornerShape(12.dp)) {
                             Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Shield, null, tint = VdBlue)
+                                Icon(Icons.Default.Shield, null, tint = BlueAccent)
                                 Spacer(Modifier.width(12.dp))
                                 Column {
                                     Text(
@@ -310,7 +298,7 @@ fun VehicleDetailScreen(
                                     Text(
                                         "Tu dinero se libera al propietario tras la devolución",
                                         fontSize = 11.sp,
-                                        color = VdMuted,
+                                        color = TextMuted,
                                         fontFamily = ManropeFontFamily
                                     )
                                 }
@@ -321,8 +309,7 @@ fun VehicleDetailScreen(
                     }
                 }
 
-                // Bottom bar
-                Surface(color = VdWhite, shadowElevation = 8.dp) {
+                Surface(color = GraySurface, shadowElevation = 8.dp) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -335,20 +322,20 @@ fun VehicleDetailScreen(
                                 "Total · 2 días",
                                 fontSize = 12.sp,
                                 fontFamily = ManropeFontFamily,
-                                color = VdMuted
+                                color = TextMuted
                             )
                             Text(
                                 "S/ ${v.pricePerDay * 2} + S/$VdDeposit",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 fontFamily = ManropeFontFamily,
-                                color = VdBlack
+                                color = TextDark
                             )
                         }
                         Button(
                             onClick = { onReserve(v.id) },
                             shape = RoundedCornerShape(50),
-                            colors = ButtonDefaults.buttonColors(containerColor = VdBlue),
+                            colors = ButtonDefaults.buttonColors(containerColor = BlueAccent),
                             modifier = Modifier.height(48.dp)
                         ) {
                             Text(
@@ -368,14 +355,14 @@ fun VehicleDetailScreen(
 @Composable
 private fun Spec(icon: ImageVector, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(icon, null, tint = VdBlue, modifier = Modifier.size(22.dp))
+        Icon(icon, null, tint = BlueAccent, modifier = Modifier.size(22.dp))
         Spacer(Modifier.height(4.dp))
         Text(
             value,
             fontWeight = FontWeight.Medium,
             fontSize = 12.sp,
             fontFamily = ManropeFontFamily,
-            color = VdBlack
+            color = TextDark
         )
     }
 }

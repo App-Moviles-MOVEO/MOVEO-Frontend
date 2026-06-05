@@ -25,6 +25,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.data.Vehicle
 import com.example.moveo_frontend.ui.components.RatingChip
 import com.example.moveo_frontend.ui.components.SectionTitle
+import com.example.moveo_frontend.ui.theme.BlueAccent
+import com.example.moveo_frontend.ui.theme.GrayUI
+import com.example.moveo_frontend.ui.theme.TextLight
+import com.example.moveo_frontend.ui.theme.TextMuted
 import com.example.moveo_frontend.ui.viewmodel.ProfileViewModel
 import com.example.moveo_frontend.ui.viewmodel.UiState
 import com.example.moveo_frontend.ui.viewmodel.VehiclesViewModel
@@ -35,8 +39,8 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 
 @Composable
 fun HomeScreen(
@@ -76,11 +80,10 @@ fun HomeScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Avatar circle
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(Color(0xFF3B82F6), androidx.compose.foundation.shape.CircleShape),
+                    .background(BlueAccent, androidx.compose.foundation.shape.CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -101,7 +104,7 @@ fun HomeScreen(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = com.example.moveo_frontend.ui.theme.ManropeFontFamily,
-                    color = Color.Black.copy(alpha = 0.62f),
+                    color = TextMuted,
                     lineHeight = 12.sp
                 )
                 Text(
@@ -115,11 +118,10 @@ fun HomeScreen(
                 )
             }
 
-            // Notification button — SVG campana custom
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(Color(0xFFE4E6E9), RoundedCornerShape(12.dp))
+                    .background(GrayUI, RoundedCornerShape(12.dp))
                     .clickable { onNotifications() },
                 contentAlignment = Alignment.Center
             ) {
@@ -167,7 +169,6 @@ fun HomeScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        // Card unificada: mapa + título + búsqueda
         Surface(
             shape = RoundedCornerShape(22.dp),
             color = Color.White,
@@ -188,10 +189,10 @@ fun HomeScreen(
                         properties = MapProperties(mapType = MapType.NORMAL),
                         uiSettings = MapUiSettings(zoomControlsEnabled = false, mapToolbarEnabled = false)
                     ) {
-                        Marker(state = MarkerState(position = lima), title = "Tú")
+                        Marker(state = rememberMarkerState(position = lima), title = "Tú")
                         vehicles.take(8).forEachIndexed { index, _ ->
                             val offset = 0.01 * (index + 1)
-                            Marker(state = MarkerState(position = LatLng(lima.latitude + offset, lima.longitude - offset)), title = "Auto disponible")
+                            Marker(state = rememberMarkerState(position = LatLng(lima.latitude + offset, lima.longitude - offset)), title = "Auto disponible")
                         }
                     }
                 }
@@ -210,7 +211,7 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
-                            .background(Color(0xFFE4E6E9), RoundedCornerShape(14.dp))
+                            .background(GrayUI, RoundedCornerShape(14.dp))
                             .clickable(onClick = onCatalog),
                         contentAlignment = Alignment.CenterStart
                     ) {
@@ -241,7 +242,7 @@ fun HomeScreen(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Normal,
                                 fontFamily = com.example.moveo_frontend.ui.theme.ManropeFontFamily,
-                                color = Color.Black.copy(alpha = 0.62f)
+                                color = TextMuted
                             )
                         }
                     }
@@ -272,7 +273,6 @@ fun HomeScreen(
         }
         Spacer(Modifier.height(20.dp))
 
-        // Header "Cerca de ti" + "Ver todo"
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -291,7 +291,7 @@ fun HomeScreen(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = com.example.moveo_frontend.ui.theme.ManropeFontFamily,
-                color = Color(0xFF3B82F6),
+                color = BlueAccent,
                 modifier = Modifier.clickable { onCatalog() }
             )
         }
@@ -302,7 +302,7 @@ fun HomeScreen(
             is UiState.Error -> Text(s.message, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
             is UiState.Success -> {
                 if (s.data.isEmpty()) {
-                    Text("Sin vehículos disponibles", color = Color.Black.copy(alpha = 0.62f), fontSize = 13.sp)
+                    Text("Sin vehículos disponibles", color = TextMuted, fontSize = 13.sp)
                 } else {
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -340,7 +340,7 @@ private fun QuickAction(
             Box(
                 Modifier
                     .size(36.dp)
-                    .background(Color(0xFF3B82F6).copy(alpha = 0.14f), RoundedCornerShape(10.dp)),
+                    .background(BlueAccent.copy(alpha = 0.14f), RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 icon()
@@ -360,7 +360,7 @@ private fun QuickAction(
                 fontSize = 11.5.sp,
                 fontWeight = FontWeight.Normal,
                 fontFamily = com.example.moveo_frontend.ui.theme.ManropeFontFamily,
-                color = Color.Black.copy(alpha = 0.62f),
+                color = TextMuted,
                 lineHeight = 11.5.sp
             )
         }
@@ -369,7 +369,7 @@ private fun QuickAction(
 
 @Composable
 private fun CarIcon() {
-    val blue = Color(0xFF3B82F6)
+    val blue = BlueAccent
     val sw = 1.6f
     androidx.compose.foundation.Canvas(modifier = Modifier.size(18.dp)) {
         val scale = size.width / 18f
@@ -420,16 +420,13 @@ private fun CarIcon() {
 
 @Composable
 private fun RouteIcon() {
-    val blue = Color(0xFF3B82F6)
+    val blue = BlueAccent
     val sw = 1.6f
     androidx.compose.foundation.Canvas(Modifier.size(18.dp)) {
         val sc = size.width / 18f
         val style = androidx.compose.ui.graphics.drawscope.Stroke(sw * sc, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
-        // Circle top-left
         drawCircle(blue, 1.5f * sc, androidx.compose.ui.geometry.Offset(4.5f * sc, 4.5f * sc), style = style)
-        // Circle bottom-right
         drawCircle(blue, 1.5f * sc, androidx.compose.ui.geometry.Offset(13.5f * sc, 13.5f * sc), style = style)
-        // S-curve path
         val p = androidx.compose.ui.graphics.Path().apply {
             moveTo(6f * sc, 4.5f * sc)
             lineTo(10.5f * sc, 4.5f * sc)
@@ -447,7 +444,7 @@ private fun RouteIcon() {
 
 @Composable
 private fun ShieldIcon() {
-    val blue = Color(0xFF3B82F6)
+    val blue = BlueAccent
     val sw = 1.6f
     androidx.compose.foundation.Canvas(Modifier.size(18.dp)) {
         val sc = size.width / 18f
@@ -473,12 +470,11 @@ private fun ShieldIcon() {
 
 @Composable
 private fun GiftIcon() {
-    val blue = Color(0xFF3B82F6)
+    val blue = BlueAccent
     val sw = 1.6f
     androidx.compose.foundation.Canvas(Modifier.size(18.dp)) {
         val sc = size.width / 18f
         val style = androidx.compose.ui.graphics.drawscope.Stroke(sw * sc, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
-        // Gift box rectangle
         val box = androidx.compose.ui.graphics.Path().apply {
             moveTo(14.25f * sc, 6.75f * sc)
             lineTo(3.75f * sc, 6.75f * sc)
@@ -492,11 +488,8 @@ private fun GiftIcon() {
             close()
         }
         drawPath(box, blue, style = style)
-        // Horizontal divider
         drawLine(blue, androidx.compose.ui.geometry.Offset(2.25f * sc, 9.75f * sc), androidx.compose.ui.geometry.Offset(15.75f * sc, 9.75f * sc), sw * sc, androidx.compose.ui.graphics.StrokeCap.Round)
-        // Vertical divider
         drawLine(blue, androidx.compose.ui.geometry.Offset(9f * sc, 6.75f * sc), androidx.compose.ui.geometry.Offset(9f * sc, 15f * sc), sw * sc, androidx.compose.ui.graphics.StrokeCap.Round)
-        // Bow left
         val bow = androidx.compose.ui.graphics.Path().apply {
             moveTo(6f * sc, 6.75f * sc)
             cubicTo(4.5f * sc, 6.75f * sc, 3.75f * sc, 4.5f * sc, 5.25f * sc, 3.75f * sc)
@@ -508,8 +501,8 @@ private fun GiftIcon() {
 
 @Composable
 private fun NearbyCard(v: Vehicle, onClick: () -> Unit) {
-    val blue = Color(0xFF3B82F6)
-    val muted = Color.Black.copy(alpha = 0.62f)
+    val blue = BlueAccent
+    val muted = TextMuted
     val manrope = com.example.moveo_frontend.ui.theme.ManropeFontFamily
 
     Surface(
@@ -519,7 +512,6 @@ private fun NearbyCard(v: Vehicle, onClick: () -> Unit) {
         modifier = Modifier.width(226.dp).clickable(onClick = onClick)
     ) {
         Column {
-            // Image area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -531,7 +523,6 @@ private fun NearbyCard(v: Vehicle, onClick: () -> Unit) {
             }
 
             Column(modifier = Modifier.padding(start = 13.dp, end = 11.dp, top = 10.dp, bottom = 12.dp)) {
-                // Title + badge
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "${v.brand} ${v.model}",
@@ -553,12 +544,11 @@ private fun NearbyCard(v: Vehicle, onClick: () -> Unit) {
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = manrope,
-                            color = Color(0xFFF6F6F6)
+                            color = TextLight
                         )
                     }
                 }
 
-                // Subtitle
                 Text(
                     text = "${v.type} · ${v.transmission}",
                     fontSize = 11.sp,
@@ -570,7 +560,6 @@ private fun NearbyCard(v: Vehicle, onClick: () -> Unit) {
 
                 Spacer(Modifier.height(10.dp))
 
-                // Price + rating
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
@@ -592,7 +581,6 @@ private fun NearbyCard(v: Vehicle, onClick: () -> Unit) {
                         )
                     }
                     Spacer(Modifier.weight(1f))
-                    // Star filled + rating
                     androidx.compose.foundation.Canvas(Modifier.size(11.dp)) {
                         val path = androidx.compose.ui.graphics.Path().apply {
                             val sc = size.width / 11f

@@ -18,14 +18,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.moveo_frontend.ui.components.BrandMark
+import com.example.moveo_frontend.ui.theme.BlueAccent
+import com.example.moveo_frontend.ui.theme.GrayBorder
 import com.example.moveo_frontend.ui.theme.ManropeFontFamily
+import com.example.moveo_frontend.ui.theme.TextDark
+import com.example.moveo_frontend.ui.theme.TextLight
+import com.example.moveo_frontend.ui.theme.TextMuted
 import kotlin.math.cos
 import kotlin.math.sin
-
-private val Blue = Color(0xFF3B82F6)
-private val Black = Color(0xFF000000)
-private val TextMuted = Black.copy(alpha = 0.62f)
-private val ButtonText = Color(0xFFF6F6F6)
 
 @Composable
 fun WelcomeScreen(onLogin: () -> Unit, onRegister: () -> Unit) {
@@ -51,7 +51,7 @@ fun WelcomeScreen(onLogin: () -> Unit, onRegister: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             BrandMark(
                 size = 36.dp,
-                background = Black,
+                background = TextDark,
                 monogramColor = Color.White,
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.ExtraBold
@@ -62,7 +62,7 @@ fun WelcomeScreen(onLogin: () -> Unit, onRegister: () -> Unit) {
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily,
-                color = Black,
+                color = TextDark,
                 letterSpacing = (-0.54).sp
             )
         }
@@ -90,7 +90,7 @@ fun WelcomeScreen(onLogin: () -> Unit, onRegister: () -> Unit) {
             fontSize = 48.sp,
             fontWeight = FontWeight.ExtraBold,
             fontFamily = ManropeFontFamily,
-            color = Black,
+            color = TextDark,
             lineHeight = 50.sp,
             letterSpacing = (-1.68).sp
         )
@@ -109,13 +109,11 @@ fun WelcomeScreen(onLogin: () -> Unit, onRegister: () -> Unit) {
 
         Button(
             onClick = onRegister,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Blue,
-                contentColor = ButtonText
+                containerColor = BlueAccent,
+                contentColor = TextLight
             )
         ) {
             Text(
@@ -123,7 +121,7 @@ fun WelcomeScreen(onLogin: () -> Unit, onRegister: () -> Unit) {
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = ManropeFontFamily,
-                color = ButtonText
+                color = TextLight
             )
         }
 
@@ -131,18 +129,16 @@ fun WelcomeScreen(onLogin: () -> Unit, onRegister: () -> Unit) {
 
         OutlinedButton(
             onClick = onLogin,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(50),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Black)
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextDark)
         ) {
             Text(
                 text = "Ingresar",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = ManropeFontFamily,
-                color = Black
+                color = TextDark
             )
         }
 
@@ -152,7 +148,6 @@ fun WelcomeScreen(onLogin: () -> Unit, onRegister: () -> Unit) {
 
 @Composable
 private fun RadarAnimation(angle: Float) {
-    val ringColor = Color(0xFFE5E7EB)
     val arcSweep = 70f
 
     Canvas(modifier = Modifier.size(260.dp)) {
@@ -164,11 +159,11 @@ private fun RadarAnimation(angle: Float) {
         val r3 = size.width * 0.47f
 
         listOf(r1, r2, r3).forEach { r ->
-            drawCircle(color = ringColor, radius = r, center = center, style = Stroke(width = 1.5.dp.toPx()))
+            drawCircle(color = GrayBorder, radius = r, center = center, style = Stroke(width = 1.5.dp.toPx()))
         }
 
         drawArc(
-            color = Blue.copy(alpha = 0.6f),
+            color = BlueAccent.copy(alpha = 0.6f),
             startAngle = angle - arcSweep,
             sweepAngle = arcSweep,
             useCenter = false,
@@ -179,14 +174,14 @@ private fun RadarAnimation(angle: Float) {
 
         val rad = Math.toRadians(angle.toDouble())
         drawCircle(
-            color = Blue,
+            color = BlueAccent,
             radius = 6.dp.toPx(),
             center = Offset(cx + (r2 * cos(rad)).toFloat(), cy + (r2 * sin(rad)).toFloat())
         )
 
         val staticRad = Math.toRadians(200.0)
         drawCircle(
-            color = Color.Black,
+            color = TextDark,
             radius = 5.dp.toPx(),
             center = Offset(cx + (r1 * cos(staticRad)).toFloat(), cy + (r1 * sin(staticRad)).toFloat())
         )

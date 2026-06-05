@@ -18,14 +18,14 @@ import com.example.moveo_frontend.ui.components.WPBackButton
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.moveo_frontend.ui.theme.BlueAccent
+import com.example.moveo_frontend.ui.theme.GrayUI
 import com.example.moveo_frontend.ui.theme.ManropeFontFamily
+import com.example.moveo_frontend.ui.theme.TextMuted
 import com.example.moveo_frontend.ui.viewmodel.KycViewModel
 import com.example.moveo_frontend.ui.viewmodel.UiState
 
-private val KycGray = Color(0xFFE4E6E9)
-private val KycBlue = Color(0xFF3B82F6)
 private val KycDark = Color(0xFF1C2532)
-private val KycMuted = Color(0xFF000000).copy(alpha = 0.62f)
 
 private data class KycStepData(val title: String, val subtitle: String)
 
@@ -74,7 +74,7 @@ fun KycScreen(onFinish: () -> Unit, onBack: () -> Unit = {}) {
                             .weight(1f)
                             .height(3.dp)
                             .background(
-                                color = if (i <= step) KycBlue else KycDark.copy(alpha = 0.2f),
+                                color = if (i <= step) BlueAccent else KycDark.copy(alpha = 0.2f),
                                 shape = RoundedCornerShape(2.dp)
                             )
                     )
@@ -89,7 +89,7 @@ fun KycScreen(onFinish: () -> Unit, onBack: () -> Unit = {}) {
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = ManropeFontFamily,
-            color = KycMuted,
+            color = TextMuted,
             letterSpacing = 0.96.sp
         )
 
@@ -111,7 +111,7 @@ fun KycScreen(onFinish: () -> Unit, onBack: () -> Unit = {}) {
             fontSize = 17.sp,
             fontWeight = FontWeight.Normal,
             fontFamily = ManropeFontFamily,
-            color = KycMuted,
+            color = TextMuted,
             lineHeight = 21.sp,
             letterSpacing = 0.sp
         )
@@ -142,7 +142,7 @@ fun KycScreen(onFinish: () -> Unit, onBack: () -> Unit = {}) {
             enabled = state !is UiState.Loading,
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(50),
-            colors = ButtonDefaults.buttonColors(containerColor = KycBlue, contentColor = Color.White)
+            colors = ButtonDefaults.buttonColors(containerColor = BlueAccent, contentColor = Color.White)
         ) {
             Text(
                 text = when {
@@ -165,7 +165,7 @@ private fun DniScannerFrame(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .aspectRatio(85.6f / 54f)
-            .background(KycGray, RoundedCornerShape(18.dp))
+            .background(GrayUI, RoundedCornerShape(18.dp))
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val o  = 16.dp.toPx()
@@ -180,37 +180,33 @@ private fun DniScannerFrame(modifier: Modifier = Modifier) {
             val blRect = Rect(o,         h-o-r*2,   o + r*2,   h-o)
             val brRect = Rect(w-o-r*2,   h-o-r*2,   w-o,       h-o)
 
-            // Top-left: arc from top (-90°) counterclockwise to left (180°)
             drawPath(Path().apply {
                 moveTo(o + bs, o)
                 lineTo(o + r,  o)
                 arcTo(tlRect, -90f, -90f, false)
                 lineTo(o, o + bs)
-            }, KycBlue, style = Stroke(sw, cap = StrokeCap.Round))
+            }, BlueAccent, style = Stroke(sw, cap = StrokeCap.Round))
 
-            // Top-right: arc from top (-90°) clockwise to right (0°)
             drawPath(Path().apply {
                 moveTo(w - o - bs, o)
                 lineTo(w - o - r,  o)
                 arcTo(trRect, -90f, 90f, false)
                 lineTo(w - o, o + bs)
-            }, KycBlue, style = Stroke(sw, cap = StrokeCap.Round))
+            }, BlueAccent, style = Stroke(sw, cap = StrokeCap.Round))
 
-            // Bottom-left: arc from left (180°) counterclockwise to bottom (90°)
             drawPath(Path().apply {
                 moveTo(o, h - o - bs)
                 lineTo(o, h - o - r)
                 arcTo(blRect, 180f, -90f, false)
                 lineTo(o + bs, h - o)
-            }, KycBlue, style = Stroke(sw, cap = StrokeCap.Round))
+            }, BlueAccent, style = Stroke(sw, cap = StrokeCap.Round))
 
-            // Bottom-right: arc from right (0°) clockwise to bottom (90°)
             drawPath(Path().apply {
                 moveTo(w - o, h - o - bs)
                 lineTo(w - o, h - o - r)
                 arcTo(brRect, 0f, 90f, false)
                 lineTo(w - o - bs, h - o)
-            }, KycBlue, style = Stroke(sw, cap = StrokeCap.Round))
+            }, BlueAccent, style = Stroke(sw, cap = StrokeCap.Round))
         }
     }
 }
