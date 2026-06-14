@@ -1,5 +1,6 @@
 package com.example.moveo_frontend.data.remote.dto
 
+import com.example.moveo_frontend.data.BusyRange
 import com.example.moveo_frontend.data.CarpoolRoute
 import com.example.moveo_frontend.data.Reservation
 import com.example.moveo_frontend.data.Review
@@ -62,6 +63,37 @@ internal fun shortDate(iso: String?): String {
         val months = listOf("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic")
         "${p[2].toInt()} ${months[p[1].toInt() - 1]}"
     } catch (_: Exception) { datePart }
+}
+
+/** Parsea un createdAt ISO del backend (UTC, con o sin 'Z'/fracción) a epoch millis. */
+internal fun parseIsoUtc(iso: String?): Long? {
+    if (iso.isNullOrBlank() || iso.length < 19) return null
+    return try {
+        java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US).apply {
+            timeZone = java.util.TimeZone.getTimeZone("UTC")
+        }.parse(iso.take(19))?.time
+    } catch (_: Exception) { null }
+}
+
+/** "2026-06-12T09:55:00" -> "hace 5 min" / "hace 2 h" / "ayer" / "10 jun". */
+internal fun relativeTime(iso: String?): String {
+    val then = parseIsoUtc(iso) ?: return "—"
+    val mins = (System.currentTimeMillis() - then) / 60000
+    return when {
+        mins < 1 -> "ahora"
+        mins < 60 -> "hace $mins min"
+        mins < 24 * 60 -> "hace ${mins / 60} h"
+        mins < 48 * 60 -> "ayer"
+        mins < 7 * 24 * 60 -> "hace ${mins / (24 * 60)} d"
+        else -> shortDate(iso)
+    }
+}
+
+/** Hora local "HH:mm" a partir del createdAt UTC del backend (para burbujas de chat). */
+internal fun localHourMinute(iso: String?): String {
+    val millis = parseIsoUtc(iso) ?: return "—"
+    return java.text.SimpleDateFormat("HH:mm", java.util.Locale.US)
+        .format(java.util.Date(millis))
 }
 
 // ===== AUTH / IAM =====
@@ -147,7 +179,12 @@ data class VehicleDto(
         description = description ?: "",
         imageEmoji = "🚗",
         ownerId = ownerId,
-        imageUrl = images.firstOrNull()
+        imageUrl = images.firstOrNull(),
+        district = location.district,
+        lat = location.lat,
+        lng = location.lng,
+        depositAmount = depositAmount?.toInt() ?: 200,
+        reviewsCount = reviewsCount
     )
 }
 
@@ -201,6 +238,17 @@ data class RentalDto(
         total = totalPrice.toInt(),
         status = rentalStatusDisplay(status)
     )
+
+    /**
+     * Rango ocupado que esta reserva impone sobre el vehículo, o null si no bloquea
+     * (cancelled/completed liberan fechas) o las fechas no son parseables.
+     */
+    fun toBusyRangeOrNull(): BusyRange? {
+        if (status.lowercase() !in setOf("pending", "accepted", "active")) return null
+        val s = parseIsoUtc(startDate) ?: return null
+        val e = parseIsoUtc(endDate) ?: return null
+        return BusyRange(s, e)
+    }
 }
 
 data class PublishVehicleRequest(
@@ -240,6 +288,7 @@ data class AdventureRouteDto(
 ) {
     fun toDomain() = CarpoolRoute(
         id = id.toString(),
+        ownerId = ownerId,
         driverName = driverName ?: community?.let { "Conductor ($it)" } ?: "Conductor MOVEO",
         driverRating = rating,
         verified = true,
@@ -306,7 +355,7 @@ data class CreateIntentRequest(
 )
 data class CreateIntentResponse(val clientSecret: String)
 
-// ===== OPERATIONS =====
+// ===== OPERATIONS (backend /Notifications, /messages, /Reviews, /user-reviews) =====
 data class ReviewDto(
     val author: String,
     val rating: Int,
@@ -316,6 +365,48 @@ data class ReviewDto(
     fun toDomain() = Review(author, rating, comment, date)
 }
 
+// Reseña entre usuarios (UserReviewResource del backend).
+data class UserReviewResourceDto(
+    val id: Int = 0,
+    val reviewerId: Int = 0,
+    val reviewedUserId: Int = 0,
+    val rentalId: Int = 0,
+    val rating: Int = 0,
+    val comment: String = "",
+    val type: String = "",
+    val createdAt: String? = null,
+    val reviewerName: String? = null
+) {
+    fun toDomain() = Review(
+        author = reviewerName ?: "Usuario MOVEO",
+        rating = rating,
+        comment = comment,
+        date = relativeTime(createdAt)
+    )
+}
+
+// Reseña de alquiler/vehículo (ReviewResource del backend).
+data class VehicleReviewResourceDto(
+    val id: Int = 0,
+    val rentalId: Int = 0,
+    val vehicleId: Int? = null,
+    val reviewerId: Int = 0,
+    val revieweeId: Int = 0,
+    val rating: Int = 0,
+    val comment: String = "",
+    val type: String = "",
+    val createdAt: String? = null,
+    val reviewerName: String? = null
+) {
+    fun toDomain() = Review(
+        author = reviewerName ?: "Usuario MOVEO",
+        rating = rating,
+        comment = comment,
+        date = relativeTime(createdAt)
+    )
+}
+
+// Request que la UI manda al repositorio; este resuelve a quién y por qué vía calificar.
 data class SubmitReviewRequest(
     val targetUserId: String,
     val reservationId: String?,
@@ -324,6 +415,28 @@ data class SubmitReviewRequest(
     val comment: String
 )
 
+// POST /Reviews (reseña de un alquiler; alimenta el rating del vehículo).
+data class CreateVehicleReviewRequest(
+    val rentalId: Int,
+    val vehicleId: Int?,
+    val reviewerId: Int,
+    val revieweeId: Int,
+    val rating: Int,
+    val comment: String,
+    val type: String = "renter_to_owner"
+)
+
+// POST /user-reviews (reseña entre usuarios; se usa para carpool, sin rental asociado).
+data class CreateUserReviewRequest(
+    val reviewerId: Int,
+    val reviewedUserId: Int,
+    val rentalId: Int = 0,
+    val rating: Int,
+    val comment: String,
+    val type: String = "renter_to_owner"
+)
+
+// Modelo que pinta la UI de notificaciones (el mock lo construye directo).
 data class NotificationDto(
     val id: String,
     val title: String,
@@ -332,6 +445,26 @@ data class NotificationDto(
     val read: Boolean
 )
 
+// NotificationResource del backend -> modelo de UI (time relativo desde createdAt).
+data class NotificationResourceDto(
+    val id: Int = 0,
+    val userId: Int = 0,
+    val title: String = "",
+    val body: String = "",
+    val type: String = "",
+    val read: Boolean = false,
+    val createdAt: String? = null
+) {
+    fun toUi() = NotificationDto(
+        id = id.toString(),
+        title = title,
+        body = body,
+        time = relativeTime(createdAt),
+        read = read
+    )
+}
+
+// Modelo que pinta la UI del chat (el mock lo construye directo).
 data class ChatMessageDto(
     val id: String,
     val from: String,
@@ -340,6 +473,29 @@ data class ChatMessageDto(
     val mine: Boolean
 )
 
-data class SendMessageRequest(val to: String, val body: String)
+// MessageResource del backend -> burbuja de chat ("mine" = lo envió el usuario logueado).
+data class MessageResourceDto(
+    val id: Int = 0,
+    val senderId: Int = 0,
+    val receiverId: Int = 0,
+    val content: String = "",
+    val read: Boolean = false,
+    val createdAt: String? = null
+) {
+    fun toUi(myId: Int) = ChatMessageDto(
+        id = id.toString(),
+        from = senderId.toString(),
+        body = content,
+        time = localHourMinute(createdAt),
+        mine = senderId == myId
+    )
+}
+
+// POST /messages (CreateMessageResource del backend).
+data class SendMessageRequest(
+    val senderId: Int,
+    val receiverId: Int,
+    val content: String
+)
 
 data class TrackingPointDto(val lat: Double, val lng: Double, val time: String)

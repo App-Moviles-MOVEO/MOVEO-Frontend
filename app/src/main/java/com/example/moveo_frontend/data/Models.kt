@@ -17,8 +17,22 @@ data class Vehicle(
     val description: String,
     val imageEmoji: String = "🚗",
     val ownerId: Int = 0,
-    val imageUrl: String? = null
-)
+    val imageUrl: String? = null,
+    val district: String = "",
+    val lat: Double? = null,
+    val lng: Double? = null,
+    val depositAmount: Int = 200,
+    val reviewsCount: Int = 0
+) {
+    /** Lugar corto para tarjetas: distrito, o la primera parte de la ubicación. */
+    val place: String get() = district.ifBlank { location.substringBefore(",").trim() }
+}
+
+/** Rango de fechas ocupado de un vehículo (millis UTC, fin exclusivo). */
+data class BusyRange(val startMillis: Long, val endMillis: Long) {
+    fun overlaps(start: Long, end: Long): Boolean = start < endMillis && startMillis < end
+    fun contains(millis: Long): Boolean = millis in startMillis until endMillis
+}
 
 data class CarpoolRoute(
     val id: String,
@@ -33,7 +47,8 @@ data class CarpoolRoute(
     val pricePerSeat: Int,
     val vehicleModel: String,
     val community: String, // ej. UPC, San Isidro
-    val onlyWomen: Boolean = false
+    val onlyWomen: Boolean = false,
+    val ownerId: Int = 0 // dueño/conductor en el backend (para chat y reseñas)
 )
 
 data class User(

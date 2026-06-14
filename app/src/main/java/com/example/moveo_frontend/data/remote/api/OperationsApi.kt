@@ -1,28 +1,63 @@
 package com.example.moveo_frontend.data.remote.api
 
-import com.example.moveo_frontend.data.remote.dto.ChatMessageDto
-import com.example.moveo_frontend.data.remote.dto.NotificationDto
-import com.example.moveo_frontend.data.remote.dto.ReviewDto
+import com.example.moveo_frontend.data.remote.dto.AdventureRouteDto
+import com.example.moveo_frontend.data.remote.dto.CreateUserReviewRequest
+import com.example.moveo_frontend.data.remote.dto.CreateVehicleReviewRequest
+import com.example.moveo_frontend.data.remote.dto.MessageResourceDto
+import com.example.moveo_frontend.data.remote.dto.NotificationResourceDto
+import com.example.moveo_frontend.data.remote.dto.RentalDto
 import com.example.moveo_frontend.data.remote.dto.SendMessageRequest
-import com.example.moveo_frontend.data.remote.dto.SubmitReviewRequest
+import com.example.moveo_frontend.data.remote.dto.UserReviewResourceDto
+import com.example.moveo_frontend.data.remote.dto.VehicleReviewResourceDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface OperationsApi {
-    @GET("reviews/me")
-    suspend fun myReviews(): List<ReviewDto>
+    // ===== Reseñas =====
+    /** Reseñas entre usuarios recibidas por el usuario (perfil). */
+    @GET("user-reviews")
+    suspend fun userReviewsReceived(@Query("reviewedUserId") reviewedUserId: Int): List<UserReviewResourceDto>
 
+    /** Reseñas de alquiler recibidas por el usuario (perfil). */
+    @GET("reviews/reviewee/{revieweeId}")
+    suspend fun rentalReviewsReceived(@Path("revieweeId") revieweeId: Int): List<VehicleReviewResourceDto>
+
+    /** Reseña de un alquiler (alimenta el rating del vehículo). */
     @POST("reviews")
-    suspend fun submitReview(@Body req: SubmitReviewRequest)
+    suspend fun submitRentalReview(@Body req: CreateVehicleReviewRequest): VehicleReviewResourceDto
 
-    @GET("notifications")
-    suspend fun notifications(): List<NotificationDto>
+    /** Reseña entre usuarios (carpool u otros flujos sin rental). */
+    @POST("user-reviews")
+    suspend fun submitUserReview(@Body req: CreateUserReviewRequest): UserReviewResourceDto
 
-    @GET("chats/{peerId}")
-    suspend fun chat(@Path("peerId") peerId: String): List<ChatMessageDto>
+    // ===== Notificaciones =====
+    @GET("notifications/user/{userId}")
+    suspend fun notifications(@Path("userId") userId: Int): List<NotificationResourceDto>
 
-    @POST("chats/send")
-    suspend fun send(@Body req: SendMessageRequest): ChatMessageDto
+    // ===== Chat 1 a 1 =====
+    @GET("messages")
+    suspend fun conversation(
+        @Query("userId") userId: Int,
+        @Query("otherUserId") otherUserId: Int
+    ): List<MessageResourceDto>
+
+    @POST("messages")
+    suspend fun send(@Body req: SendMessageRequest): MessageResourceDto
+
+    @PUT("messages/read")
+    suspend fun markConversationRead(
+        @Query("userId") userId: Int,
+        @Query("otherUserId") otherUserId: Int
+    )
+
+    // ===== Lookups para resolver a quién se califica =====
+    @GET("rentals/{id}")
+    suspend fun rental(@Path("id") id: String): RentalDto
+
+    @GET("adventure-routes/{id}")
+    suspend fun adventureRoute(@Path("id") id: String): AdventureRouteDto
 }

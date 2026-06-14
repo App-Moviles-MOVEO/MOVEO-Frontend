@@ -49,11 +49,17 @@ fun CarpoolDetailScreen(id: String, onBack: () -> Unit, onReserve: (String) -> U
         position = CameraPosition.fromLatLngZoom(lima, 12f)
     }
 
+    // El chat es contra el conductor (ownerId en el backend), no contra el id de la ruta.
+    val loadedRoute = (state as? UiState.Success)?.data
+
     Scaffold(topBar = {
         TopAppBar(title = { Text("Detalle de ruta") }, navigationIcon = {
             WPBackButton(onClick = onBack)
         }, actions = {
-            IconButton(onClick = { onChat(id) }) { Icon(Icons.Filled.Chat, null) }
+            IconButton(
+                enabled = loadedRoute != null,
+                onClick = { loadedRoute?.let { onChat(it.ownerId.toString()) } }
+            ) { Icon(Icons.Filled.Chat, null) }
         })
     }) { padding ->
         Box(Modifier.padding(padding)) {

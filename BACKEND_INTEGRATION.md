@@ -199,7 +199,64 @@ Tu doc dice que al arrancar ejecuta **`EnsureCreated`**. Eso:
   dotnet ef migrations add InitialCreate
   dotnet ef database update
   ```
-  Y en `Program.cs` usar `db.Database.Migrate();` en lugar de `EnsureCreated()`. Así el esquema evoluciona sin recrear tablas ni perder datos.
+  Y en `Program.cs` u
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- sar `db.Database.Migrate();` en lugar de `EnsureCreated()`. Así el esquema evoluciona sin recrear tablas ni perder datos.
 
 ### Tablas que el **cliente (renter)** realmente usa
 Crea/mantén tablas SOLO para lo que se usa en el flujo cliente:

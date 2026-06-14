@@ -37,4 +37,9 @@ interface RentalApi {
 
     @GET("rentals/{id}")
     suspend fun rental(@Path("id") id: String): RentalDto
+
+    // Reservas (todas o de un vehículo). Se usa para calcular disponibilidad por fechas
+    // mientras el backend no expone /vehicles/{id}/availability (ver BACKEND_REQUESTS.md).
+    @GET("rentals")
+    suspend fun rentals(@Query("vehicleId") vehicleId: Int? = null): List<RentalDto>
 }

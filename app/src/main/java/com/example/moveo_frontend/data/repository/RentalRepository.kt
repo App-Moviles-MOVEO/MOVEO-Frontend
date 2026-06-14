@@ -1,6 +1,7 @@
 package com.example.moveo_frontend.data.repository
 
 import com.example.moveo_frontend.BuildConfig
+import com.example.moveo_frontend.data.BusyRange
 import com.example.moveo_frontend.data.MockData
 import com.example.moveo_frontend.data.Reservation
 import com.example.moveo_frontend.data.Vehicle
@@ -10,6 +11,7 @@ import com.example.moveo_frontend.data.remote.dto.PaymentResponse
 import com.example.moveo_frontend.data.remote.dto.PublishVehicleRequest
 import com.example.moveo_frontend.data.remote.dto.RentalPayRequest
 import com.example.moveo_frontend.data.remote.dto.bodyTypeQuery
+import com.example.moveo_frontend.data.remote.dto.parseIsoUtc
 import com.example.moveo_frontend.data.session.SessionManager
 import kotlinx.coroutines.delay
 
@@ -22,13 +24,32 @@ class RentalRepository(
     private suspend fun currentUserId(): Int =
         session.userIdBlocking()?.toIntOrNull() ?: error("No hay sesión activa")
 
-    suspend fun vehicles(type: String? = null, query: String? = null): Result<List<Vehicle>> = runCatching {
+    suspend fun vehicles(type: String? = null, district: String? = null): Result<List<Vehicle>> = runCatching {
         if (mock()) {
             delay(400)
-            return@runCatching if (type == null) MockData.vehicles else MockData.vehicles.filter { it.type == type }
+            return@runCatching MockData.vehicles
+                .filter { type == null || it.type == type }
+                .filter { district == null || it.location.contains(district, ignoreCase = true) }
         }
-        // El backend filtra por bodyType ("compact"/"sedan"/...). La app pasa la etiqueta en español.
-        api.list(bodyType = bodyTypeQuery(type)).map { it.toDomain() }
+        // El backend filtra por bodyType ("compact"/"sedan"/...) y district (Contains).
+        api.list(bodyType = bodyTypeQuery(type), district = district).map { it.toDomain() }
+    }
+
+    /** Fechas ocupadas de un vehículo (reservas pending/accepted/active). */
+    suspend fun busyRanges(vehicleId: String): Result<List<BusyRange>> = runCatching {
+        if (mock()) return@runCatching emptyList()
+        api.rentals(vehicleId = vehicleId.toIntOrNull() ?: return@runCatching emptyList())
+            .mapNotNull { it.toBusyRangeOrNull() }
+    }
+
+    /**
+     * Fechas ocupadas de TODOS los vehículos (vehicleId -> rangos), para filtrar el
+     * catálogo por disponibilidad. Una sola llamada a GET /rentals.
+     */
+    suspend fun allBusyRanges(): Result<Map<Int, List<BusyRange>>> = runCatching {
+        if (mock()) return@runCatching emptyMap()
+        api.rentals().groupBy({ it.vehicleId }, { it.toBusyRangeOrNull() })
+            .mapValues { (_, ranges) -> ranges.filterNotNull() }
     }
 
     suspend fun vehicle(id: String): Result<Vehicle> = runCatching {
@@ -41,8 +62,8 @@ class RentalRepository(
     }
 
     suspend fun publish(req: PublishVehicleRequest): Result<Vehicle> = runCatching {
-        // Publicar vehículo es flujo de propietario; el contrato del backend difiere bastante.
-        // Por ahora se mantiene como demo local para no bloquear el flujo del arrendatario.
+        // Publicar vehículo es flujo de propietario; se hará en otra app/pantalla.
+        // Se mantiene como demo local para no bloquear el flujo del arrendatario.
         delay(700)
         Vehicle(
             id = "v_new_${System.currentTimeMillis()}",
@@ -57,6 +78,8 @@ class RentalRepository(
     /**
      * Crea la reserva en el backend (POST /rentals). Necesita ownerId (del vehículo) y el total.
      * renterId sale de la sesión. Fechas en ISO 8601 UTC.
+     * Antes de crear, verifica disponibilidad contra las reservas existentes del vehículo
+     * (el backend aún no rechaza solapamientos con 409 — ver BACKEND_REQUESTS.md P1).
      */
     suspend fun reserve(
         vehicleId: String,
@@ -75,6 +98,14 @@ class RentalRepository(
                 startDate = startDate, endDate = endDate,
                 total = totalPrice, status = "Confirmado"
             )
+        }
+        val start = parseIsoUtc(startDate)
+        val end = parseIsoUtc(endDate)
+        if (start != null && end != null) {
+            val busy = busyRanges(vehicleId).getOrDefault(emptyList())
+            if (busy.any { it.overlaps(start, end) }) {
+                error("Este auto ya está reservado en esas fechas. Elige otro rango.")
+            }
         }
         api.createRental(
             CreateRentalRequest(

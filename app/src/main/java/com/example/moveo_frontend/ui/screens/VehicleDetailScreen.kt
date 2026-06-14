@@ -21,10 +21,13 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.moveo_frontend.data.session.RentalDateStore
 import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.RatingChip
 import com.example.moveo_frontend.ui.components.StateContainer
@@ -39,8 +42,6 @@ import com.example.moveo_frontend.ui.viewmodel.VehicleDetailViewModel
 import kotlin.math.cos
 import kotlin.math.sin
 
-private val VdDeposit     = 200
-
 @Composable
 fun VehicleDetailScreen(
     id: String,
@@ -51,6 +52,11 @@ fun VehicleDetailScreen(
     val vm: VehicleDetailViewModel = viewModel()
     val state by vm.state.collectAsState()
     LaunchedEffect(id) { vm.load(id) }
+
+    // Fechas elegidas en el catálogo (si no hay, se asumen 2 días y se eligen en el pago).
+    val startSel by RentalDateStore.startMillis.collectAsState()
+    val endSel by RentalDateStore.endMillis.collectAsState()
+    val days = remember(startSel, endSel) { RentalDateStore.days(default = 2) }
 
     Box(
         modifier = Modifier
@@ -74,16 +80,25 @@ fun VehicleDetailScreen(
                             .fillMaxWidth()
                             .height(280.dp)
                     ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize().background(Color(0xFFE8E8E8)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Rounded.DirectionsCar,
-                                contentDescription = null,
-                                tint = Color(0xFFBBBBBB),
-                                modifier = Modifier.size(96.dp)
+                        if (v.imageUrl != null) {
+                            AsyncImage(
+                                model = v.imageUrl,
+                                contentDescription = "${v.brand} ${v.model}",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
                             )
+                        } else {
+                            Box(
+                                modifier = Modifier.fillMaxSize().background(Color(0xFFE8E8E8)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Rounded.DirectionsCar,
+                                    contentDescription = null,
+                                    tint = Color(0xFFBBBBBB),
+                                    modifier = Modifier.size(96.dp)
+                                )
+                            }
                         }
 
                         Row(
@@ -199,7 +214,7 @@ fun VehicleDetailScreen(
                                     )
                                 }
                                 Text(
-                                    text = "+ S/$VdDeposit garantía",
+                                    text = "+ S/${v.depositAmount} garantía",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Normal,
                                     fontFamily = ManropeFontFamily,
@@ -253,7 +268,9 @@ fun VehicleDetailScreen(
                                     if (v.ownerVerified) VerifiedBadge()
                                 }
                                 Text(
-                                    "Propietario · ${v.rating} ★",
+                                    if (v.reviewsCount > 0)
+                                        "Propietario · ${v.rating} ★ · ${v.reviewsCount} reseñas"
+                                    else "Propietario · ${v.rating} ★",
                                     fontSize = 12.sp,
                                     color = TextMuted,
                                     fontFamily = ManropeFontFamily
@@ -319,13 +336,13 @@ fun VehicleDetailScreen(
                     ) {
                         Column(Modifier.weight(1f)) {
                             Text(
-                                "Total · 2 días",
+                                "Total · $days ${if (days == 1) "día" else "días"}",
                                 fontSize = 12.sp,
                                 fontFamily = ManropeFontFamily,
                                 color = TextMuted
                             )
                             Text(
-                                "S/ ${v.pricePerDay * 2} + S/$VdDeposit",
+                                "S/ ${v.pricePerDay * days} + S/${v.depositAmount}",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 fontFamily = ManropeFontFamily,

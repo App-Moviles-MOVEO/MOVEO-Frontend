@@ -2,6 +2,7 @@ package com.example.moveo_frontend.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.moveo_frontend.data.BusyRange
 import com.example.moveo_frontend.data.Vehicle
 import com.example.moveo_frontend.data.remote.dto.PaymentMethodDto
 import com.example.moveo_frontend.data.remote.dto.PaymentResponse
@@ -19,6 +20,10 @@ class PaymentViewModel : ViewModel() {
 
     private val _methods = MutableStateFlow<List<PaymentMethodDto>>(emptyList())
     val methods = _methods.asStateFlow()
+
+    // Fechas ya reservadas del vehículo: el calendario las bloquea.
+    private val _busyRanges = MutableStateFlow<List<BusyRange>>(emptyList())
+    val busyRanges = _busyRanges.asStateFlow()
 
     // Estado del pago completo (exito final / error / loading durante la preparacion).
     private val _payment = MutableStateFlow<UiState<PaymentResponse>>(UiState.Idle)
@@ -41,6 +46,9 @@ class PaymentViewModel : ViewModel() {
                 .onFailure { _vehicle.value = UiState.Error(it.friendly()) }
             billing.methods()
                 .onSuccess { _methods.value = it }
+            // Si falla, el calendario simplemente no bloquea días; reserve() vuelve a validar.
+            rental.busyRanges(vehicleId)
+                .onSuccess { _busyRanges.value = it }
         }
     }
 

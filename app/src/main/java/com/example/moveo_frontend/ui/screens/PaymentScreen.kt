@@ -7,11 +7,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.moveo_frontend.data.session.RentalDateStore
 import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.StateContainer
 import com.example.moveo_frontend.ui.components.WPButton
@@ -38,8 +37,11 @@ import java.util.TimeZone
 
 private const val DAY_MS = 24L * 60 * 60 * 1000
 
+// Los millis del DatePicker son medianoche UTC: se formatea en UTC para no correrse un día.
 private fun fmt(millis: Long): String =
-    SimpleDateFormat("EEE dd MMM yyyy", Locale.forLanguageTag("es")).format(Date(millis))
+    SimpleDateFormat("EEE dd MMM yyyy", Locale.forLanguageTag("es"))
+        .apply { timeZone = TimeZone.getTimeZone("UTC") }
+        .format(Date(millis))
 
 // El backend espera ISO 8601 UTC (ej. "2026-06-10T09:00:00Z").
 private fun fmtIso(millis: Long): String =
@@ -76,8 +78,12 @@ fun PaymentScreen(id: String, onBack: () -> Unit, onSuccess: () -> Unit) {
         )
     }
 
-    var startMillis by remember { mutableStateOf(System.currentTimeMillis() + DAY_MS) }
-    var days by remember { mutableStateOf(3) }
+    val busyRanges by vm.busyRanges.collectAsState()
+
+    // Fechas: arrancan con lo elegido en el catálogo; si no hay, mañana + 3 días.
+    val initialStart = remember { RentalDateStore.startMillis.value ?: (System.currentTimeMillis() + DAY_MS) }
+    var startMillis by remember { mutableStateOf(initialStart) }
+    var endMillis by remember { mutableStateOf(RentalDateStore.endMillis.value ?: (initialStart + 3 * DAY_MS)) }
     var showDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(topBar = {
@@ -102,11 +108,13 @@ fun PaymentScreen(id: String, onBack: () -> Unit, onSuccess: () -> Unit) {
                 }
             } else {
                 StateContainer(vehicleState, onRetry = { vm.load(id) }) { v ->
-                    val endMillis = startMillis + days * DAY_MS
+                    val days = ((endMillis - startMillis) / DAY_MS).toInt().coerceAtLeast(1)
                     val rental = v.pricePerDay * days
                     val fee = (rental * 0.05).toInt()
-                    val deposit = 100
+                    val deposit = v.depositAmount
                     val total = rental + fee + deposit
+                    // Choque con reservas existentes del vehículo (pending/accepted/active).
+                    val datesConflict = busyRanges.any { it.overlaps(startMillis, endMillis) }
 
                     Column(Modifier.fillMaxSize()) {
                         Column(
@@ -129,24 +137,36 @@ fun PaymentScreen(id: String, onBack: () -> Unit, onSuccess: () -> Unit) {
                                         Icon(Icons.Default.CalendarMonth, null, tint = MaterialTheme.colorScheme.primary)
                                         Spacer(Modifier.width(12.dp))
                                         Column(Modifier.weight(1f)) {
-                                            Text("Día de inicio", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Inicio", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             Text(fmt(startMillis), fontWeight = FontWeight.SemiBold)
                                         }
                                         Text("Cambiar", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                                     }
                                     HorizontalDivider(Modifier.padding(vertical = 12.dp))
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true }
+                                    ) {
+                                        Icon(Icons.Default.CalendarMonth, null, tint = MaterialTheme.colorScheme.primary)
+                                        Spacer(Modifier.width(12.dp))
                                         Column(Modifier.weight(1f)) {
-                                            Text("Cantidad de días", fontWeight = FontWeight.SemiBold)
-                                            Text("Devolución: ${fmt(endMillis)}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Devolución", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(fmt(endMillis), fontWeight = FontWeight.SemiBold)
                                         }
-                                        OutlinedIconButton(onClick = { if (days > 1) days-- }, enabled = days > 1) {
-                                            Icon(Icons.Default.Remove, "Quitar día")
-                                        }
-                                        Text("$days", fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(horizontal = 12.dp))
-                                        OutlinedIconButton(onClick = { if (days < 30) days++ }, enabled = days < 30) {
-                                            Icon(Icons.Default.Add, "Agregar día")
-                                        }
+                                        Text(
+                                            "$days ${if (days == 1) "día" else "días"}",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 13.sp
+                                        )
+                                    }
+                                    if (datesConflict) {
+                                        Spacer(Modifier.height(10.dp))
+                                        Text(
+                                            "Este auto ya está reservado en parte de esas fechas. Elige otro rango.",
+                                            color = MaterialTheme.colorScheme.error,
+                                            fontSize = 12.sp
+                                        )
                                     }
                                 }
                             }
@@ -229,7 +249,7 @@ fun PaymentScreen(id: String, onBack: () -> Unit, onSuccess: () -> Unit) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 WPButton(
                                     text = if (paymentState is UiState.Loading) "Procesando..." else "Pagar S/ $total con tarjeta",
-                                    enabled = paymentState !is UiState.Loading,
+                                    enabled = paymentState !is UiState.Loading && !datesConflict,
                                     onClick = {
                                         vm.preparePayment(v.id, "card", total, fmtIso(startMillis), fmtIso(endMillis))
                                     }
@@ -237,6 +257,7 @@ fun PaymentScreen(id: String, onBack: () -> Unit, onSuccess: () -> Unit) {
                                 // Pago rápido por Yape: culmina la transacción directo, sin pasar por Stripe.
                                 WPOutlinedButton(
                                     text = "Pagar con Yape (rápido)",
+                                    enabled = paymentState !is UiState.Loading && !datesConflict,
                                     onClick = {
                                         vm.payDirect(v.id, "yape", total, fmtIso(startMillis), fmtIso(endMillis))
                                     }
@@ -246,25 +267,43 @@ fun PaymentScreen(id: String, onBack: () -> Unit, onSuccess: () -> Unit) {
                     }
 
                     if (showDatePicker) {
-                        val dpState = rememberDatePickerState(
-                            initialSelectedDateMillis = startMillis,
+                        val rangeState = rememberDateRangePickerState(
+                            initialSelectedStartDateMillis = startMillis,
+                            initialSelectedEndDateMillis = endMillis,
                             selectableDates = object : SelectableDates {
-                                override fun isSelectableDate(utcTimeMillis: Long): Boolean =
-                                    utcTimeMillis >= System.currentTimeMillis() - DAY_MS
+                                // Bloquea días pasados y días ya reservados del vehículo.
+                                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                    if (utcTimeMillis < System.currentTimeMillis() - DAY_MS) return false
+                                    return busyRanges.none { it.contains(utcTimeMillis) }
+                                }
                             }
                         )
                         DatePickerDialog(
                             onDismissRequest = { showDatePicker = false },
                             confirmButton = {
-                                TextButton(onClick = {
-                                    dpState.selectedDateMillis?.let { startMillis = it }
-                                    showDatePicker = false
-                                }) { Text("Aceptar") }
+                                TextButton(
+                                    enabled = rangeState.selectedStartDateMillis != null &&
+                                        rangeState.selectedEndDateMillis != null,
+                                    onClick = {
+                                        val s = rangeState.selectedStartDateMillis!!
+                                        val e = rangeState.selectedEndDateMillis!!.let { if (it > s) it else s + DAY_MS }
+                                        startMillis = s
+                                        endMillis = e
+                                        RentalDateStore.set(s, e)
+                                        showDatePicker = false
+                                    }
+                                ) { Text("Aceptar") }
                             },
                             dismissButton = {
                                 TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
                             }
-                        ) { DatePicker(state = dpState) }
+                        ) {
+                            DateRangePicker(
+                                state = rangeState,
+                                showModeToggle = false,
+                                modifier = Modifier.heightIn(max = 440.dp)
+                            )
+                        }
                     }
                 }
             }

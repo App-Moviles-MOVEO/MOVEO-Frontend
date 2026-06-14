@@ -29,6 +29,6 @@ object ServiceLocator {
         rentalRepo = RentalRepository(ApiClient.rentalApi(session), session)
         carpoolingRepo = CarpoolingRepository(ApiClient.carpoolingApi(session), session)
         billingRepo = BillingRepository(ApiClient.billingApi(session))
-        operationsRepo = OperationsRepository(ApiClient.operationsApi(session))
+        operationsRepo = OperationsRepository(ApiClient.operationsApi(session), session)
     }
 }
