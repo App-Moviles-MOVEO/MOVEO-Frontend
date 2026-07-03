@@ -7,11 +7,13 @@ import com.example.moveo_frontend.data.remote.api.AuthApi
 import com.example.moveo_frontend.data.remote.dto.ForgotPasswordRequest
 import com.example.moveo_frontend.data.remote.dto.LoginRequest
 import com.example.moveo_frontend.data.remote.dto.RegisterRequest
+import com.example.moveo_frontend.data.remote.dto.ResetPasswordRequest
 import com.example.moveo_frontend.data.session.SessionManager
 import kotlinx.coroutines.delay
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
 class AuthRepository(
@@ -49,9 +51,15 @@ class AuthRepository(
         user.toDomain()
     }
 
-    suspend fun forgotPassword(email: String): Result<Unit> = runCatching {
+    // Devuelve el resetToken cuando el backend está en modo desarrollo (null en producción).
+    suspend fun forgotPassword(email: String): Result<String?> = runCatching {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) { delay(400); return@runCatching null }
+        api.forgotPassword(ForgotPasswordRequest(email)).resetToken
+    }
+
+    suspend fun resetPassword(token: String, newPassword: String): Result<Unit> = runCatching {
         if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) { delay(400); return@runCatching }
-        api.forgotPassword(ForgotPasswordRequest(email))
+        api.resetPassword(ResetPasswordRequest(token, newPassword))
     }
 
     suspend fun me(): Result<User> = runCatching {
@@ -66,10 +74,12 @@ class AuthRepository(
 
     suspend fun uploadKyc(dniFront: File, dniBack: File, selfie: File): Result<String> = runCatching {
         if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) { delay(800); return@runCatching "approved" }
+        val userId = session.userIdBlocking() ?: error("No hay sesión activa")
         val media = "image/jpeg".toMediaTypeOrNull()
         api.uploadKyc(
-            MultipartBody.Part.createFormData("dni_front", dniFront.name, dniFront.asRequestBody(media)),
-            MultipartBody.Part.createFormData("dni_back", dniBack.name, dniBack.asRequestBody(media)),
+            userId.toRequestBody("text/plain".toMediaTypeOrNull()),
+            MultipartBody.Part.createFormData("dniFront", dniFront.name, dniFront.asRequestBody(media)),
+            MultipartBody.Part.createFormData("dniBack", dniBack.name, dniBack.asRequestBody(media)),
             MultipartBody.Part.createFormData("selfie", selfie.name, selfie.asRequestBody(media))
         ).status
     }

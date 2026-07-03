@@ -30,15 +30,19 @@ class CarpoolViewModel : ViewModel() {
     private val _onlyVerified = MutableStateFlow(true)
     val onlyVerified = _onlyVerified.asStateFlow()
 
+    private val _community = MutableStateFlow<String?>(null)
+    val community = _community.asStateFlow()
+
     init { load() }
 
     fun setOnlyWomen(v: Boolean) { _onlyWomen.value = v; load() }
     fun setOnlyVerified(v: Boolean) { _onlyVerified.value = v; load() }
+    fun setCommunity(v: String?) { _community.value = v?.takeIf { it.isNotBlank() }; load() }
 
     fun load() {
         _routes.value = UiState.Loading
         viewModelScope.launch {
-            repo.routes(_onlyWomen.value.takeIf { it }, _onlyVerified.value.takeIf { it })
+            repo.routes(_onlyWomen.value.takeIf { it }, _onlyVerified.value.takeIf { it }, _community.value)
                 .onSuccess { _routes.value = UiState.Success(it) }
                 .onFailure { _routes.value = UiState.Error(it.friendly()) }
         }

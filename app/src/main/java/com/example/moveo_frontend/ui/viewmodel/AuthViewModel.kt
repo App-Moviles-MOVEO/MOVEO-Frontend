@@ -17,8 +17,12 @@ class AuthViewModel : ViewModel() {
     private val _register = MutableStateFlow<UiState<User>>(UiState.Idle)
     val register = _register.asStateFlow()
 
-    private val _forgot = MutableStateFlow<UiState<Unit>>(UiState.Idle)
+    // Success.data = resetToken (no null solo en modo desarrollo del backend).
+    private val _forgot = MutableStateFlow<UiState<String?>>(UiState.Idle)
     val forgot = _forgot.asStateFlow()
+
+    private val _reset = MutableStateFlow<UiState<Unit>>(UiState.Idle)
+    val reset = _reset.asStateFlow()
 
     fun doLogin(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {
@@ -54,8 +58,21 @@ class AuthViewModel : ViewModel() {
         _forgot.value = UiState.Loading
         viewModelScope.launch {
             repo.forgotPassword(email.trim())
-                .onSuccess { _forgot.value = UiState.Success(Unit) }
+                .onSuccess { _forgot.value = UiState.Success(it) }
                 .onFailure { _forgot.value = UiState.Error(it.friendly()) }
+        }
+    }
+
+    fun doReset(token: String, newPassword: String) {
+        if (token.isBlank() || newPassword.isBlank()) {
+            _reset.value = UiState.Error("Ingresa el código y la nueva contraseña")
+            return
+        }
+        _reset.value = UiState.Loading
+        viewModelScope.launch {
+            repo.resetPassword(token.trim(), newPassword)
+                .onSuccess { _reset.value = UiState.Success(Unit) }
+                .onFailure { _reset.value = UiState.Error(it.friendly()) }
         }
     }
 

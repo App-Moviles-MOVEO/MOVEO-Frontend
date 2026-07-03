@@ -1,5 +1,9 @@
 package com.example.moveo_frontend.ui.screens
 
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import com.example.moveo_frontend.ui.components.WPBackButton
 import androidx.compose.ui.unit.dp
@@ -24,6 +29,7 @@ import com.example.moveo_frontend.ui.theme.ManropeFontFamily
 import com.example.moveo_frontend.ui.theme.TextMuted
 import com.example.moveo_frontend.ui.viewmodel.KycViewModel
 import com.example.moveo_frontend.ui.viewmodel.UiState
+import java.io.File
 
 private val KycDark = Color(0xFF1C2532)
 
@@ -40,8 +46,29 @@ private val kycSteps = listOf(
 fun KycScreen(onFinish: () -> Unit, onBack: () -> Unit = {}) {
     val vm: KycViewModel = viewModel()
     val state by vm.state.collectAsState()
+    val context = LocalContext.current
     var step by remember { mutableStateOf(0) }
     val totalSteps = kycSteps.size
+
+    // Documentos elegidos por el usuario (galería). Se suben al backend en el último paso.
+    var frontFile by remember { mutableStateOf<File?>(null) }
+    var backFile by remember { mutableStateOf<File?>(null) }
+
+    val pickFront = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) { frontFile = copyUriToCache(context, uri, "kyc_front.jpg"); step = 1 }
+    }
+    val pickBack = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) { backFile = copyUriToCache(context, uri, "kyc_back.jpg"); step = 2 }
+    }
+    val pickSelfie = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val front = frontFile
+        val back = backFile
+        if (uri != null && front != null && back != null) {
+            val selfie = copyUriToCache(context, uri, "kyc_selfie.jpg")
+            vm.submit(front, back, selfie)
+            step = 3
+        }
+    }
 
     LaunchedEffect(state) {
         if (state is UiState.Success) onFinish()
@@ -136,8 +163,12 @@ fun KycScreen(onFinish: () -> Unit, onBack: () -> Unit = {}) {
 
         Button(
             onClick = {
-                if (step < totalSteps - 1) step++
-                else onFinish()
+                when (step) {
+                    0 -> pickFront.launch("image/*")
+                    1 -> pickBack.launch("image/*")
+                    2 -> pickSelfie.launch("image/*")
+                    else -> onFinish()
+                }
             },
             enabled = state !is UiState.Loading,
             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -147,7 +178,7 @@ fun KycScreen(onFinish: () -> Unit, onBack: () -> Unit = {}) {
             Text(
                 text = when {
                     state is UiState.Loading -> "Enviando..."
-                    step < totalSteps - 1 -> "Capturar"
+                    step < totalSteps - 1 -> "Subir foto"
                     else -> "Finalizar"
                 },
                 fontSize = 16.sp,
@@ -158,6 +189,15 @@ fun KycScreen(onFinish: () -> Unit, onBack: () -> Unit = {}) {
 
         Spacer(Modifier.height(40.dp))
     }
+}
+
+/** Copia la imagen elegida (content Uri) a un archivo temporal para poder subirla como multipart. */
+private fun copyUriToCache(context: Context, uri: Uri, name: String): File {
+    val file = File(context.cacheDir, name)
+    context.contentResolver.openInputStream(uri)?.use { input ->
+        file.outputStream().use { output -> input.copyTo(output) }
+    }
+    return file
 }
 
 @Composable

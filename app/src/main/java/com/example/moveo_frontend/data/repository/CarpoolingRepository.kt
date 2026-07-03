@@ -29,15 +29,25 @@ class CarpoolingRepository(
     private suspend fun currentUserId(): Int =
         session.userIdBlocking()?.toIntOrNull() ?: error("No hay sesión activa")
 
-    suspend fun routes(onlyWomen: Boolean? = null, verified: Boolean? = null): Result<List<CarpoolRoute>> = runCatching {
+    suspend fun routes(
+        onlyWomen: Boolean? = null,
+        verified: Boolean? = null,
+        community: String? = null
+    ): Result<List<CarpoolRoute>> = runCatching {
         if (mock()) {
             delay(400)
             return@runCatching MockData.routes.filter {
-                (onlyWomen != true || it.onlyWomen) && (verified != true || it.verified)
+                (onlyWomen != true || it.onlyWomen) &&
+                    (verified != true || it.verified) &&
+                    (community.isNullOrBlank() || it.community.equals(community, ignoreCase = true))
             }
         }
-        // El backend solo filtra por onlyWomen; "verified" se ignora (todas se muestran).
-        api.list(type = "carpool", onlyWomen = onlyWomen.takeIf { it == true }).map { it.toDomain() }
+        // El backend filtra por onlyWomen y community; "verified" se ignora (todas se muestran).
+        api.list(
+            type = "carpool",
+            onlyWomen = onlyWomen.takeIf { it == true },
+            community = community?.takeIf { it.isNotBlank() }
+        ).map { it.toDomain() }
     }
 
     suspend fun route(id: String): Result<CarpoolRoute> = runCatching {

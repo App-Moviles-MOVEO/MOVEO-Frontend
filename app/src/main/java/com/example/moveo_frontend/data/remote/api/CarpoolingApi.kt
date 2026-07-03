@@ -13,7 +13,8 @@ interface CarpoolingApi {
     @GET("adventure-routes")
     suspend fun list(
         @Query("type") type: String? = "carpool",
-        @Query("onlyWomen") onlyWomen: Boolean? = null
+        @Query("onlyWomen") onlyWomen: Boolean? = null,
+        @Query("community") community: String? = null
     ): List<AdventureRouteDto>
 
     @GET("adventure-routes/{id}")
