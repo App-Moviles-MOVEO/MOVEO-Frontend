@@ -2,15 +2,19 @@ package com.example.moveo_frontend.data.repository
 
 import com.example.moveo_frontend.BuildConfig
 import com.example.moveo_frontend.data.BusyRange
+import com.example.moveo_frontend.data.CancelOutcome
 import com.example.moveo_frontend.data.MockData
 import com.example.moveo_frontend.data.Reservation
 import com.example.moveo_frontend.data.Vehicle
 import com.example.moveo_frontend.data.remote.api.RentalApi
+import com.example.moveo_frontend.data.remote.dto.CreatePaymentRequest
 import com.example.moveo_frontend.data.remote.dto.CreateRentalRequest
+import com.example.moveo_frontend.data.remote.dto.PatchRentalRequest
 import com.example.moveo_frontend.data.remote.dto.PaymentResponse
 import com.example.moveo_frontend.data.remote.dto.PublishVehicleRequest
 import com.example.moveo_frontend.data.remote.dto.RentalPayRequest
 import com.example.moveo_frontend.data.remote.dto.bodyTypeQuery
+import com.example.moveo_frontend.data.remote.dto.nowIsoUtc
 import com.example.moveo_frontend.data.remote.dto.parseIsoUtc
 import com.example.moveo_frontend.data.session.SessionManager
 import kotlinx.coroutines.delay
@@ -155,5 +159,76 @@ class RentalRepository(
                 ?: error("Reserva no encontrada")
         }
         api.rental(id).toDomain()
+    }
+
+    /**
+     * US54: cancela la reserva según la política (Reservation.refundPercent) y
+     * US26/US33: si corresponde reembolso, lo procesa automáticamente registrando
+     * un pago type="refund" del propietario hacia el arrendatario (POST /payments).
+     * El reembolso es best-effort: si falla, la cancelación se mantiene y se informa.
+     */
+    suspend fun cancel(reservation: Reservation): Result<CancelOutcome> = runCatching {
+        require(reservation.cancellable) { "Esta reserva ya no puede cancelarse" }
+        val pct = reservation.refundPercent()
+        val amount = reservation.refundAmount()
+        if (mock()) {
+            delay(500)
+            return@runCatching CancelOutcome(pct, amount, refundProcessed = amount > 0)
+        }
+        api.patchRental(reservation.id, PatchRentalRequest(status = "cancelled"))
+        // Solo se reembolsa lo efectivamente cobrado (reservas pendientes sin pago no generan reembolso).
+        val rentalId = reservation.id.toIntOrNull() ?: 0
+        val paid = runCatching { api.rentalPayments(rentalId) }.getOrDefault(emptyList())
+            .filter { it.isCharge }
+            .sumOf { it.amount }
+        val refund = minOf(amount.toDouble(), paid)
+        val refunded = refund > 0 && runCatching {
+            api.createPayment(
+                CreatePaymentRequest(
+                    payerId = reservation.ownerId,
+                    recipientId = currentUserId(),
+                    rentalId = rentalId,
+                    amount = refund,
+                    description = "Reembolso automático por cancelación ($pct% del total)"
+                )
+            )
+        }.isSuccess
+        CancelOutcome(pct, refund.toInt(), refundProcessed = refunded)
+    }
+
+    /**
+     * Avanza la reserva al siguiente estado del flujo (pending → accepted → active → completed).
+     * "accepted" sella acceptedAt y "completed" sella completedAt; completed/cancelled
+     * liberan las fechas, con lo que el vehículo vuelve a estar disponible.
+     */
+    suspend fun advanceStatus(reservationId: String, newStatus: String): Result<Reservation> = runCatching {
+        if (mock()) {
+            delay(300)
+            val r = MockData.reservations.firstOrNull { it.id == reservationId }
+                ?: error("Reserva no encontrada")
+            return@runCatching r.copy(status = com.example.moveo_frontend.data.remote.dto.rentalStatusDisplay(newStatus))
+        }
+        api.patchRental(
+            reservationId,
+            PatchRentalRequest(
+                status = newStatus,
+                acceptedAt = if (newStatus == "accepted") nowIsoUtc() else null,
+                completedAt = if (newStatus == "completed") nowIsoUtc() else null
+            )
+        ).toDomain()
+    }
+
+    /** US20: confirma la llegada al destino → la reserva pasa a completed en el backend. */
+    suspend fun completeTrip(reservationId: String): Result<Reservation> = runCatching {
+        if (mock()) {
+            delay(400)
+            val r = MockData.reservations.firstOrNull { it.id == reservationId }
+                ?: error("Reserva no encontrada")
+            return@runCatching r.copy(status = "Finalizado")
+        }
+        api.patchRental(
+            reservationId,
+            PatchRentalRequest(status = "completed", completedAt = nowIsoUtc())
+        ).toDomain()
     }
 }

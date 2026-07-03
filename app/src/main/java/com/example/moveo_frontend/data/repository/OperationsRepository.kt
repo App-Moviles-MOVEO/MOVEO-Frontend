@@ -8,6 +8,7 @@ import com.example.moveo_frontend.data.remote.dto.ChatMessageDto
 import com.example.moveo_frontend.data.remote.dto.CreateUserReviewRequest
 import com.example.moveo_frontend.data.remote.dto.CreateVehicleReviewRequest
 import com.example.moveo_frontend.data.remote.dto.NotificationDto
+import com.example.moveo_frontend.data.remote.dto.PatchRentalRequest
 import com.example.moveo_frontend.data.remote.dto.SendMessageRequest
 import com.example.moveo_frontend.data.remote.dto.SubmitReviewRequest
 import com.example.moveo_frontend.data.session.SessionManager
@@ -58,6 +59,14 @@ class OperationsRepository(
                     comment = req.comment
                 )
             )
+            // Deja constancia en la reserva (vehicleRated/vehicleRating) para que la UI
+            // muestre la nota y no permita calificar dos veces. Best-effort.
+            runCatching {
+                api.patchRental(
+                    rental.id.toString(),
+                    PatchRentalRequest(vehicleRated = true, vehicleRating = req.rating)
+                )
+            }
             return@runCatching
         }
 

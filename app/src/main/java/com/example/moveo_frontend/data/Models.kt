@@ -77,7 +77,39 @@ data class Reservation(
     val startDate: String,
     val endDate: String,
     val total: Int,
-    val status: String // Confirmado, En curso, Finalizado
+    val status: String, // Pendiente, Aceptado, En curso, Finalizado, Cancelado
+    val startMillis: Long? = null, // inicio en epoch millis UTC (para la política de cancelación)
+    val ownerId: Int = 0, // propietario del vehículo (origen del reembolso)
+    val vehicleRated: Boolean = false, // el arrendatario ya calificó este viaje
+    val vehicleRating: Int? = null // estrellas que dio (1..5)
+) {
+    /** La reserva aún no empieza y puede cancelarse. */
+    val cancellable: Boolean
+        get() = status in setOf("Pendiente", "Aceptado", "Confirmado")
+
+    /**
+     * Política de cancelación: % del total que se reembolsa según la anticipación.
+     * ≥48 h antes del inicio → 100 %, entre 24 y 48 h → 50 %, <24 h → 0 %.
+     * Sin fecha parseable se asume la más favorable al usuario (100 %).
+     */
+    fun refundPercent(now: Long = System.currentTimeMillis()): Int {
+        val start = startMillis ?: return 100
+        val hoursLeft = (start - now) / 3_600_000.0
+        return when {
+            hoursLeft >= 48 -> 100
+            hoursLeft >= 24 -> 50
+            else -> 0
+        }
+    }
+
+    fun refundAmount(now: Long = System.currentTimeMillis()): Int = total * refundPercent(now) / 100
+}
+
+/** Resultado de una cancelación: qué reembolso aplicó y si se procesó automáticamente. */
+data class CancelOutcome(
+    val refundPercent: Int,
+    val refundAmount: Int,
+    val refundProcessed: Boolean
 )
 
 /** Asiento reservado en un viaje compartido (carpool). Aparece en "Mis reservas". */

@@ -233,7 +233,9 @@ data class RentalDto(
     val totalPrice: Double = 0.0,
     val status: String = "pending",
     val vehicleName: String? = null,
-    val vehicleImage: String? = null
+    val vehicleImage: String? = null,
+    val vehicleRated: Boolean = false,
+    val vehicleRating: Int? = null
 ) {
     fun toDomain() = Reservation(
         id = id.toString(),
@@ -241,7 +243,11 @@ data class RentalDto(
         startDate = shortDate(startDate),
         endDate = shortDate(endDate),
         total = totalPrice.toInt(),
-        status = rentalStatusDisplay(status)
+        status = rentalStatusDisplay(status),
+        startMillis = parseIsoUtc(startDate),
+        ownerId = ownerId,
+        vehicleRated = vehicleRated,
+        vehicleRating = vehicleRating
     )
 
     /**
@@ -255,6 +261,54 @@ data class RentalDto(
         return BusyRange(s, e)
     }
 }
+
+/** PATCH /rentals/{id}: solo los campos a cambiar (fechas en ISO UTC). */
+data class PatchRentalRequest(
+    val status: String? = null,
+    val completedAt: String? = null,
+    val acceptedAt: String? = null,
+    val vehicleRated: Boolean? = null,
+    val vehicleRating: Int? = null
+)
+
+/**
+ * POST /payments. Se usa para registrar el reembolso automático al cancelar:
+ * el propietario (payer) devuelve al arrendatario (recipient) según la política.
+ */
+data class CreatePaymentRequest(
+    val payerId: Int,
+    val recipientId: Int,
+    val rentalId: Int,
+    val amount: Double,
+    val paymentMethod: String = "yape",
+    val type: String = "refund",
+    val status: String = "completed",
+    val description: String? = null,
+    val currency: String = "PEN"
+)
+
+data class CreatedPaymentDto(
+    val id: Int = 0,
+    val status: String = ""
+)
+
+/** Pago existente de una reserva (GET /payments/rental/{id}). */
+data class PaymentRecordDto(
+    val id: Int = 0,
+    val amount: Double = 0.0,
+    val status: String = "",
+    val type: String = ""
+) {
+    /** Cuenta como dinero cobrado al arrendatario (reembolsable). */
+    val isCharge: Boolean
+        get() = type != "refund" && status.lowercase() in setOf("completed", "success", "paid")
+}
+
+/** Instante actual en ISO 8601 UTC (formato que espera el backend). */
+internal fun nowIsoUtc(): String =
+    java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US).apply {
+        timeZone = java.util.TimeZone.getTimeZone("UTC")
+    }.format(java.util.Date())
 
 data class PublishVehicleRequest(
     val brand: String,

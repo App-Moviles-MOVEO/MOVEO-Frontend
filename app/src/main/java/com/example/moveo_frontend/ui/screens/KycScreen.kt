@@ -23,6 +23,7 @@ import com.example.moveo_frontend.ui.components.WPBackButton
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.moveo_frontend.BuildConfig
 import com.example.moveo_frontend.ui.theme.BlueAccent
 import com.example.moveo_frontend.ui.theme.GrayUI
 import com.example.moveo_frontend.ui.theme.ManropeFontFamily
@@ -184,6 +185,33 @@ fun KycScreen(onFinish: () -> Unit, onBack: () -> Unit = {}) {
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = ManropeFontFamily
+            )
+        }
+
+        // Atajo SOLO PARA DESARROLLO: salta el escaneo de DNI/selfie para agilizar
+        // las pruebas del registro. No aparece en builds release.
+        if (BuildConfig.DEBUG && step < totalSteps - 1) {
+            Spacer(Modifier.height(8.dp))
+            TextButton(
+                onClick = onFinish,
+                enabled = state !is UiState.Loading,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Omitir escaneo de DNI",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = ManropeFontFamily,
+                    color = TextMuted
+                )
+            }
+            Text(
+                text = "Solo para desarrollo: omite la verificación para facilitar las pruebas del registro.",
+                fontSize = 12.sp,
+                fontFamily = ManropeFontFamily,
+                color = TextMuted,
+                lineHeight = 15.sp,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
             )
         }
 

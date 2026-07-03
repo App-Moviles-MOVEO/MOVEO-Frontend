@@ -14,18 +14,53 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.moveo_frontend.data.Reservation
 import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.StateContainer
 import com.example.moveo_frontend.ui.components.WPButton
 import com.example.moveo_frontend.ui.components.WPOutlinedButton
 import com.example.moveo_frontend.ui.viewmodel.ReservationsViewModel
+import com.example.moveo_frontend.ui.viewmodel.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReservationDetailScreen(id: String, onBack: () -> Unit, onTrack: () -> Unit, onRate: () -> Unit) {
     val vm: ReservationsViewModel = viewModel()
     val state by vm.detail.collectAsState()
+    val cancelState by vm.cancelState.collectAsState()
+    val advanceState by vm.advanceState.collectAsState()
+    var showCancelDialog by remember { mutableStateOf(false) }
     LaunchedEffect(id) { vm.loadDetail(id) }
+
+    // Resultado de la cancelación (US54) y del reembolso automático (US26/US33).
+    when (val cs = cancelState) {
+        is UiState.Success -> AlertDialog(
+            onDismissRequest = { vm.resetCancel() },
+            confirmButton = { TextButton(onClick = { vm.resetCancel() }) { Text("Entendido") } },
+            title = { Text("Reserva cancelada") },
+            text = {
+                Text(
+                    when {
+                        cs.data.refundPercent == 0 ->
+                            "Según la política de cancelación (<24 h antes del inicio) no corresponde reembolso."
+                        cs.data.refundAmount <= 0 ->
+                            "La reserva no tenía pagos registrados, así que no hay nada que reembolsar."
+                        cs.data.refundProcessed ->
+                            "Se procesó automáticamente un reembolso de S/ ${cs.data.refundAmount} (${cs.data.refundPercent}% del total). Lo verás reflejado en tu método de pago."
+                        else ->
+                            "Corresponde un reembolso de S/ ${cs.data.refundAmount} (${cs.data.refundPercent}%). No pudimos procesarlo automáticamente; se reintentará y te notificaremos."
+                    }
+                )
+            }
+        )
+        is UiState.Error -> AlertDialog(
+            onDismissRequest = { vm.resetCancel() },
+            confirmButton = { TextButton(onClick = { vm.resetCancel() }) { Text("Cerrar") } },
+            title = { Text("No se pudo cancelar") },
+            text = { Text(cs.message) }
+        )
+        else -> {}
+    }
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Detalle de reserva") }, navigationIcon = {
@@ -81,20 +116,177 @@ fun ReservationDetailScreen(id: String, onBack: () -> Unit, onTrack: () -> Unit,
                         }
                     }
 
-                    Spacer(Modifier.weight(1f))
-                    if (r.status == "En curso") {
-                        WPButton("Ver viaje en vivo", onClick = onTrack)
-                        Spacer(Modifier.height(10.dp))
+                    if (r.cancellable) {
+                        Spacer(Modifier.height(16.dp))
+                        CancellationPolicyCard(r)
                     }
-                    if (r.status == "Finalizado") {
-                        WPButton("Calificar viaje", onClick = onRate)
+
+                    Spacer(Modifier.weight(1f))
+
+                    if (advanceState is UiState.Error) {
+                        Text(
+                            (advanceState as UiState.Error).message,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 13.sp
+                        )
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    val advancing = advanceState is UiState.Loading
+
+                    // Avance del flujo de la reserva. Aceptar es acción del propietario:
+                    // aquí se ofrece como demo mientras la app de owners no existe.
+                    when (r.status) {
+                        "Pendiente" -> {
+                            WPButton(
+                                if (advancing) "Procesando..." else "Aceptar reserva (demo propietario)",
+                                enabled = !advancing,
+                                onClick = { vm.advance(r.id, "accepted") }
+                            )
+                            Text(
+                                "Demo: en producción esta acción la hace el propietario desde su app.",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                            Spacer(Modifier.height(10.dp))
+                        }
+                        "Aceptado" -> {
+                            WPButton(
+                                if (advancing) "Procesando..." else "Iniciar viaje",
+                                enabled = !advancing,
+                                onClick = { vm.advance(r.id, "active") }
+                            )
+                            Spacer(Modifier.height(10.dp))
+                        }
+                        "En curso" -> {
+                            WPButton("Ver viaje en vivo", onClick = onTrack)
+                            Spacer(Modifier.height(10.dp))
+                            WPOutlinedButton(
+                                if (advancing) "Procesando..." else "Finalizar viaje (libera el vehículo)",
+                                enabled = !advancing,
+                                onClick = { vm.advance(r.id, "completed") }
+                            )
+                            Spacer(Modifier.height(10.dp))
+                        }
+                        "Finalizado" -> {
+                            if (r.vehicleRated) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        "Ya calificaste este viaje: ${"★".repeat(r.vehicleRating ?: 0)} (${r.vehicleRating}/5)",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp,
+                                        modifier = Modifier.padding(12.dp)
+                                    )
+                                }
+                            } else {
+                                WPButton("Calificar viaje", onClick = onRate)
+                            }
+                            Spacer(Modifier.height(10.dp))
+                        }
+                    }
+                    if (r.cancellable) {
+                        OutlinedButton(
+                            onClick = { showCancelDialog = true },
+                            enabled = cancelState !is UiState.Loading,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (cancelState is UiState.Loading) "Cancelando..." else "Cancelar reserva")
+                        }
                         Spacer(Modifier.height(10.dp))
                     }
                     WPOutlinedButton("Cerrar", onClick = onBack)
+
+                    if (showCancelDialog) {
+                        CancelConfirmDialog(
+                            reservation = r,
+                            onConfirm = {
+                                showCancelDialog = false
+                                vm.cancel(r)
+                            },
+                            onDismiss = { showCancelDialog = false }
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+/** Política de cancelación con el reembolso que aplicaría ahora mismo (US54). */
+@Composable
+private fun CancellationPolicyCard(r: Reservation) {
+    val pct = r.refundPercent()
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(14.dp),
+        tonalElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text("Política de cancelación", fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(6.dp))
+            PolicyRow("Hasta 48 h antes del inicio", "100% de reembolso", pct == 100)
+            PolicyRow("Entre 24 y 48 h antes", "50% de reembolso", pct == 50)
+            PolicyRow("Menos de 24 h antes", "Sin reembolso", pct == 0)
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
+            Text(
+                if (pct > 0) "Si cancelas ahora: reembolso automático de S/ ${r.refundAmount()} ($pct%)"
+                else "Si cancelas ahora no corresponde reembolso",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (pct > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
+@Composable
+private fun PolicyRow(rule: String, refund: String, active: Boolean) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+        Text(
+            rule,
+            fontSize = 13.sp,
+            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (active) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.weight(1f))
+        Text(
+            refund,
+            fontSize = 13.sp,
+            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun CancelConfirmDialog(reservation: Reservation, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val pct = reservation.refundPercent()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("¿Cancelar reserva?") },
+        text = {
+            Text(
+                if (pct > 0)
+                    "Se cancelará tu reserva de ${reservation.vehicleName} y se procesará automáticamente un reembolso de S/ ${reservation.refundAmount()} ($pct% del total pagado)."
+                else
+                    "Se cancelará tu reserva de ${reservation.vehicleName}. Según la política (<24 h antes del inicio) no corresponde reembolso."
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Sí, cancelar", color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Volver") } }
+    )
 }
 
 @Composable

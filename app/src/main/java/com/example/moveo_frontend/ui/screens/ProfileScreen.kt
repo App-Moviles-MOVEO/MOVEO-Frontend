@@ -69,7 +69,7 @@ fun ProfileScreen(
                         Text(user.email, color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
                         Spacer(Modifier.height(12.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            StatChip("${user.rating}★", "Rating")
+                            StatChip(if (user.rating > 0.0) "${user.rating}★" else "Nuevo", "Rating")
                             Spacer(Modifier.width(12.dp))
                             StatChip("${user.tripsCompleted}", "Viajes")
                             Spacer(Modifier.width(12.dp))

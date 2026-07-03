@@ -1,6 +1,10 @@
 package com.example.moveo_frontend.data.remote.api
 
+import com.example.moveo_frontend.data.remote.dto.CreatePaymentRequest
 import com.example.moveo_frontend.data.remote.dto.CreateRentalRequest
+import com.example.moveo_frontend.data.remote.dto.CreatedPaymentDto
+import com.example.moveo_frontend.data.remote.dto.PatchRentalRequest
+import com.example.moveo_frontend.data.remote.dto.PaymentRecordDto
 import com.example.moveo_frontend.data.remote.dto.PublishVehicleRequest
 import com.example.moveo_frontend.data.remote.dto.RentalDto
 import com.example.moveo_frontend.data.remote.dto.RentalPayRequest
@@ -8,6 +12,7 @@ import com.example.moveo_frontend.data.remote.dto.RentalPayResponse
 import com.example.moveo_frontend.data.remote.dto.VehicleDto
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -42,4 +47,16 @@ interface RentalApi {
     // mientras el backend no expone /vehicles/{id}/availability (ver BACKEND_REQUESTS.md).
     @GET("rentals")
     suspend fun rentals(@Query("vehicleId") vehicleId: Int? = null): List<RentalDto>
+
+    // Cambio de estado de la reserva: cancelar (US54) o completar al llegar (US20).
+    @PATCH("rentals/{id}")
+    suspend fun patchRental(@Path("id") id: String, @Body req: PatchRentalRequest): RentalDto
+
+    // Registro del reembolso automático al cancelar (US26/US33).
+    @POST("payments")
+    suspend fun createPayment(@Body req: CreatePaymentRequest): CreatedPaymentDto
+
+    // Pagos de una reserva: para reembolsar solo lo efectivamente pagado.
+    @GET("payments/rental/{rentalId}")
+    suspend fun rentalPayments(@Path("rentalId") rentalId: Int): List<PaymentRecordDto>
 }
