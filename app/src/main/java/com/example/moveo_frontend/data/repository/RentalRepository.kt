@@ -68,6 +68,15 @@ class RentalRepository(
         api.detail(id).toDomain()
     }
 
+    /** Reseñas del vehículo (más recientes primero) para mostrarlas en el detalle. */
+    suspend fun vehicleReviews(vehicleId: String): Result<List<com.example.moveo_frontend.data.Review>> = runCatching {
+        if (mock()) { delay(200); return@runCatching MockData.reviews }
+        val id = vehicleId.toIntOrNull() ?: return@runCatching emptyList()
+        api.vehicleReviews(id)
+            .sortedByDescending { it.createdAt ?: "" }
+            .map { it.toDomain() }
+    }
+
     suspend fun publish(req: PublishVehicleRequest): Result<Vehicle> = runCatching {
         // Publicar vehículo es flujo de propietario; se hará en otra app/pantalla.
         // Se mantiene como demo local para no bloquear el flujo del arrendatario.

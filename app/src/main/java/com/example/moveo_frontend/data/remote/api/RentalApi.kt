@@ -13,6 +13,7 @@ import com.example.moveo_frontend.data.remote.dto.RentalDto
 import com.example.moveo_frontend.data.remote.dto.RentalPayRequest
 import com.example.moveo_frontend.data.remote.dto.RentalPayResponse
 import com.example.moveo_frontend.data.remote.dto.VehicleDto
+import com.example.moveo_frontend.data.remote.dto.VehicleReviewResourceDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
@@ -70,4 +71,8 @@ interface RentalApi {
     // Comprobante oficial del alquiler (US25). 422 si aún no hay pago completado.
     @GET("rentals/{id}/invoice")
     suspend fun invoice(@Path("id") id: String): InvoiceDto
+
+    // Reseñas de un vehículo, para mostrarlas en su detalle antes de reservar.
+    @GET("reviews")
+    suspend fun vehicleReviews(@Query("vehicleId") vehicleId: Int): List<VehicleReviewResourceDto>
 }

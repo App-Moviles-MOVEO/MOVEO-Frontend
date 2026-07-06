@@ -90,7 +90,10 @@ fun AppNavGraph(startDestination: String = Routes.WELCOME) {
         composable(Routes.SETTINGS) {
             SettingsScreen(
                 onBack = { nav.popBackStack() },
-                onHelp = { nav.navigate(Routes.HELP) }
+                onHelp = { nav.navigate(Routes.HELP) },
+                onLoggedOut = {
+                    nav.navigate(Routes.WELCOME) { popUpTo(0) { inclusive = true } }
+                }
             )
         }
         composable(Routes.HELP) {

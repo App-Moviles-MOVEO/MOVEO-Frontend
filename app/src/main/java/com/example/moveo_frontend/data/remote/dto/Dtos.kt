@@ -115,6 +115,7 @@ data class ForgotPasswordRequest(val email: String)
 // La respuesta trae resetToken SOLO en desarrollo (en prod llega por correo).
 data class ForgotPasswordResponse(val message: String? = null, val resetToken: String? = null)
 data class ResetPasswordRequest(val token: String, val newPassword: String)
+data class ChangePasswordRequest(val userId: Int, val currentPassword: String, val newPassword: String)
 data class UserDto(
     val id: Int = 0,
     val firstName: String = "",

@@ -51,6 +51,7 @@ fun VehicleDetailScreen(
 ) {
     val vm: VehicleDetailViewModel = viewModel()
     val state by vm.state.collectAsState()
+    val reviews by vm.reviews.collectAsState()
     LaunchedEffect(id) { vm.load(id) }
 
     // Fechas elegidas en el catálogo (si no hay, se asumen 2 días y se eligen en el pago).
@@ -322,6 +323,22 @@ fun VehicleDetailScreen(
                             }
                         }
 
+                        // Reseñas reales del vehículo (calificaciones de otros arrendatarios).
+                        if (reviews.isNotEmpty()) {
+                            Spacer(Modifier.height(20.dp))
+                            Text(
+                                "Reseñas (${reviews.size})",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = ManropeFontFamily,
+                                fontSize = 16.sp,
+                                color = TextDark
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            reviews.take(5).forEach { review ->
+                                VehicleReviewItem(review.author, review.rating, review.comment, review.date)
+                            }
+                        }
+
                         Spacer(Modifier.height(20.dp))
                     }
                 }
@@ -365,6 +382,30 @@ fun VehicleDetailScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+/** Reseña individual del vehículo: autor, estrellas, comentario y fecha relativa. */
+@Composable
+private fun VehicleReviewItem(author: String, rating: Int, comment: String, date: String) {
+    Surface(
+        color = GraySurface,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(author, fontWeight = FontWeight.SemiBold, fontFamily = ManropeFontFamily, fontSize = 14.sp, color = TextDark)
+                Spacer(Modifier.weight(1f))
+                Text("★".repeat(rating.coerceIn(0, 5)), color = Color(0xFFF59E0B), fontSize = 13.sp)
+            }
+            if (comment.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Text(comment, fontSize = 13.sp, color = TextMuted, fontFamily = ManropeFontFamily, lineHeight = 18.sp)
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(date, fontSize = 11.sp, color = TextMuted, fontFamily = ManropeFontFamily)
         }
     }
 }

@@ -143,4 +143,27 @@ class OperationsRepository(
         )
         Unit
     }
+
+    /**
+     * US46: solicitud de alianza corporativa. Se registra como ticket de soporte
+     * (categoría "partnership") para que el equipo comercial le dé seguimiento.
+     */
+    suspend fun requestCorporatePartnership(
+        company: String,
+        contactEmail: String,
+        message: String
+    ): Result<Unit> = runCatching {
+        if (mock()) { delay(300); return@runCatching }
+        api.createSupportTicket(
+            CreateSupportTicketRequest(
+                userId = currentUserId(),
+                subject = "Alianza corporativa · $company",
+                description = "Empresa: $company\nContacto: $contactEmail\n\n$message",
+                category = "partnership",
+                priority = "normal",
+                type = "partnership"
+            )
+        )
+        Unit
+    }
 }
