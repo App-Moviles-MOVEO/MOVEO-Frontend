@@ -30,9 +30,12 @@ fun CarpoolConfirmScreen(id: String, onBack: () -> Unit, onDone: () -> Unit) {
     val vm: CarpoolViewModel = viewModel()
     val state by vm.detail.collectAsState()
     val bookState by vm.book.collectAsState()
+    val gender by vm.gender.collectAsState()
     LaunchedEffect(id) { vm.loadDetail(id) }
 
     var seats by remember { mutableStateOf(1) }
+    // US11: control de acceso a rutas exclusivas para mujeres.
+    var showWomenDialog by remember { mutableStateOf(false) }
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Confirmar reserva") }, navigationIcon = {
@@ -48,9 +51,9 @@ fun CarpoolConfirmScreen(id: String, onBack: () -> Unit, onDone: () -> Unit) {
                 ) {
                     Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(96.dp))
                     Spacer(Modifier.height(16.dp))
-                    Text("¡Asiento reservado!", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Text("¡Solicitud enviada!", fontSize = 22.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
-                    Text("El conductor recibirá tu solicitud. Coordina los detalles por el chat.",
+                    Text("Tu asiento queda pendiente hasta que el conductor acepte la solicitud. El pago se hace al confirmarse; puedes coordinar por el chat.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(32.dp))
                     WPButton("Listo", onClick = onDone)
@@ -78,6 +81,15 @@ fun CarpoolConfirmScreen(id: String, onBack: () -> Unit, onDone: () -> Unit) {
                                     SummaryLine("Ruta", "${r.origin} → ${r.destination}")
                                     SummaryLine("Salida", "${r.departureTime} · ${r.date}")
                                     SummaryLine("Vehículo", r.vehicleModel)
+                                    if (r.onlyWomen) {
+                                        HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                                        Text(
+                                            "🚺 Ruta exclusiva para mujeres",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
                                 }
                             }
 
@@ -128,21 +140,65 @@ fun CarpoolConfirmScreen(id: String, onBack: () -> Unit, onDone: () -> Unit) {
 
                         Surface(tonalElevation = 4.dp) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                // US11: en rutas solo-mujeres se valida el género antes de reservar.
+                                val tryBook: () -> Unit = {
+                                    if (!r.onlyWomen || gender == "female") vm.book(r, seats)
+                                    else showWomenDialog = true
+                                }
                                 WPButton(
                                     text = if (bookState is UiState.Loading) "Procesando..." else "Pagar con Yape S/ $total",
                                     enabled = bookState !is UiState.Loading,
-                                    onClick = { vm.book(r, seats) }
+                                    onClick = tryBook
                                 )
                                 WPOutlinedButton(
                                     text = "Confirmar y pagar al subir",
-                                    onClick = { vm.book(r, seats) }
+                                    onClick = tryBook
                                 )
                             }
+                        }
+
+                        if (showWomenDialog) {
+                            WomenOnlyDialog(
+                                declaredMale = gender == "male",
+                                onConfirm = {
+                                    showWomenDialog = false
+                                    vm.confirmFemale()
+                                    vm.book(r, seats)
+                                },
+                                onDismiss = { showWomenDialog = false }
+                            )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+/**
+ * US11: control de acceso a rutas solo-mujeres. Si el usuario declaró género
+ * masculino se bloquea la reserva; si no declaró, se le pide confirmar.
+ * (Validación en el dispositivo: el backend aún no guarda género.)
+ */
+@Composable
+private fun WomenOnlyDialog(declaredMale: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    if (declaredMale) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Ruta exclusiva para mujeres") },
+            text = { Text("Esta ruta fue publicada solo para pasajeras. Busca otra ruta disponible para ti.") },
+            confirmButton = { TextButton(onClick = onDismiss) { Text("Entendido") } }
+        )
+    } else {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Ruta exclusiva para mujeres") },
+            text = { Text("Esta ruta fue publicada solo para pasajeras. ¿Confirmas que eres mujer? Tu respuesta quedará guardada en tu perfil.") },
+            confirmButton = {
+                TextButton(onClick = onConfirm) { Text("Sí, confirmo") }
+            },
+            dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        )
     }
 }
 

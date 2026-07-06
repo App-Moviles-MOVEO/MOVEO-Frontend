@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.moveo_frontend.data.CancelOutcome
 import com.example.moveo_frontend.data.CarpoolBooking
 import com.example.moveo_frontend.data.Reservation
+import com.example.moveo_frontend.data.remote.dto.InvoiceDto
 import com.example.moveo_frontend.di.ServiceLocator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -84,4 +85,19 @@ class ReservationsViewModel : ViewModel() {
     }
 
     fun resetAdvance() { _advanceState.value = UiState.Idle }
+
+    // US25: comprobante digital emitido por el backend.
+    private val _invoice = MutableStateFlow<UiState<InvoiceDto>>(UiState.Idle)
+    val invoice = _invoice.asStateFlow()
+
+    fun loadInvoice(reservationId: String) {
+        _invoice.value = UiState.Loading
+        viewModelScope.launch {
+            repo.invoice(reservationId)
+                .onSuccess { _invoice.value = UiState.Success(it) }
+                .onFailure { _invoice.value = UiState.Error(it.friendly()) }
+        }
+    }
+
+    fun resetInvoice() { _invoice.value = UiState.Idle }
 }

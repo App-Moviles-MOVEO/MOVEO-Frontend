@@ -6,6 +6,7 @@ import com.example.moveo_frontend.data.remote.dto.KycUploadResponse
 import com.example.moveo_frontend.data.remote.dto.LoginRequest
 import com.example.moveo_frontend.data.remote.dto.RegisterRequest
 import com.example.moveo_frontend.data.remote.dto.ResetPasswordRequest
+import com.example.moveo_frontend.data.remote.dto.UserDetailDto
 import com.example.moveo_frontend.data.remote.dto.UserDto
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -14,6 +15,7 @@ import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface AuthApi {
@@ -32,6 +34,10 @@ interface AuthApi {
 
     @GET("auth/me")
     suspend fun me(@Query("userId") userId: Int): UserDto
+
+    // Perfil extendido: stats (reputation, badges, onTimeRate) y estado/motivo KYC.
+    @GET("users/{id}")
+    suspend fun userDetail(@Path("id") id: Int): UserDetailDto
 
     // El backend espera userId + al menos un documento. Nombres de campo: dniFront, dniBack, selfie.
     @Multipart

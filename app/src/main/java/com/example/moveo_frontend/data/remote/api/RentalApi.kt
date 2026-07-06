@@ -3,9 +3,12 @@ package com.example.moveo_frontend.data.remote.api
 import com.example.moveo_frontend.data.remote.dto.CreatePaymentRequest
 import com.example.moveo_frontend.data.remote.dto.CreateRentalRequest
 import com.example.moveo_frontend.data.remote.dto.CreatedPaymentDto
+import com.example.moveo_frontend.data.remote.dto.InvoiceDto
 import com.example.moveo_frontend.data.remote.dto.PatchRentalRequest
 import com.example.moveo_frontend.data.remote.dto.PaymentRecordDto
 import com.example.moveo_frontend.data.remote.dto.PublishVehicleRequest
+import com.example.moveo_frontend.data.remote.dto.RefundRequest
+import com.example.moveo_frontend.data.remote.dto.RefundResponse
 import com.example.moveo_frontend.data.remote.dto.RentalDto
 import com.example.moveo_frontend.data.remote.dto.RentalPayRequest
 import com.example.moveo_frontend.data.remote.dto.RentalPayResponse
@@ -59,4 +62,12 @@ interface RentalApi {
     // Pagos de una reserva: para reembolsar solo lo efectivamente pagado.
     @GET("payments/rental/{rentalId}")
     suspend fun rentalPayments(@Path("rentalId") rentalId: Int): List<PaymentRecordDto>
+
+    // Reembolso server-side con política incluida (US26/US33).
+    @POST("payments/{id}/refund")
+    suspend fun refundPayment(@Path("id") paymentId: Int, @Body req: RefundRequest): RefundResponse
+
+    // Comprobante oficial del alquiler (US25). 422 si aún no hay pago completado.
+    @GET("rentals/{id}/invoice")
+    suspend fun invoice(@Path("id") id: String): InvoiceDto
 }

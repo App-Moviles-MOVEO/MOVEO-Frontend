@@ -106,7 +106,10 @@ data class RegisterRequest(
     val email: String,
     val password: String,
     val phone: String? = null,
-    val role: String = "renter"
+    val role: String = "renter",
+    // "female" | "male". El backend aún no lo persiste (User sin género);
+    // se manda igual para que quede registrado cuando agreguen el campo.
+    val gender: String? = null
 )
 data class ForgotPasswordRequest(val email: String)
 // La respuesta trae resetToken SOLO en desarrollo (en prod llega por correo).
@@ -304,6 +307,59 @@ data class PaymentRecordDto(
         get() = type != "refund" && status.lowercase() in setOf("completed", "success", "paid")
 }
 
+// GET /users/{id}: perfil extendido. reputation/onTimeRate/badges llegan cuando el backend
+// nuevo esté desplegado; con el deploy anterior vienen ausentes (null) y la app usa su fallback.
+data class UserDetailDto(
+    val id: Int = 0,
+    val kycStatus: String? = null,
+    val kycRejectionReason: String? = null,
+    val stats: UserStatsDto? = null
+)
+
+data class UserStatsDto(
+    val completedRentals: Int = 0,
+    val reputation: Double? = null,
+    val onTimeRate: Double? = null,
+    val badges: List<String>? = null
+)
+
+/** Badges del backend → etiquetas en español para los chips del perfil. */
+internal fun badgeLabel(code: String): String = when (code.uppercase()) {
+    "VERIFIED" -> "Verificado"
+    "PUNCTUAL" -> "Puntual"
+    "TOP_RENTER" -> "Top arrendatario"
+    "FIVE_STARS" -> "5 estrellas"
+    else -> code.lowercase().replaceFirstChar { it.uppercase() }
+}
+
+// GET /rentals/{id}/invoice: comprobante oficial server-side (US25), numeración WPE-{año}-{idPago}.
+data class InvoiceDto(
+    val invoiceNumber: String = "",
+    val issuedAt: String? = null,
+    val rentalId: Int = 0,
+    val status: String = "",
+    val customer: InvoiceCustomerDto = InvoiceCustomerDto(),
+    val vehicle: InvoiceVehicleDto = InvoiceVehicleDto(),
+    val period: InvoicePeriodDto = InvoicePeriodDto(),
+    val payment: InvoicePaymentDto = InvoicePaymentDto(),
+    val amount: InvoiceAmountDto = InvoiceAmountDto()
+)
+
+data class InvoiceCustomerDto(val fullName: String = "", val dni: String? = null, val email: String? = null)
+data class InvoiceVehicleDto(val name: String = "", val licensePlate: String? = null)
+data class InvoicePeriodDto(val start: String? = null, val end: String? = null, val days: Int = 0)
+data class InvoicePaymentDto(val id: Int = 0, val method: String? = null, val currency: String? = null, val transactionId: String? = null)
+data class InvoiceAmountDto(val total: Double = 0.0, val currency: String = "PEN")
+
+// POST /payments/{id}/refund: el backend aplica la política (≥48h→100%, 24-48h→50%, <24h→422),
+// marca el pago como refunded, crea el movimiento de reembolso y notifica a ambas partes.
+data class RefundRequest(val reason: String? = null)
+data class RefundResponse(
+    val refundedAmount: Double = 0.0,
+    val policy: String = "",
+    val status: String = ""
+)
+
 /** Instante actual en ISO 8601 UTC (formato que espera el backend). */
 internal fun nowIsoUtc(): String =
     java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US).apply {
@@ -396,7 +452,16 @@ data class PublishRouteRequest(
     val recurring: Boolean
 )
 
-data class BookSeatBody(val seats: Int)
+// El backend exige passengerId: crea una solicitud PENDING (el asiento se descuenta al aceptar).
+data class BookSeatBody(val passengerId: Int, val seats: Int)
+
+// Respuesta del book: la solicitud creada (no la ruta).
+data class BookRequestDto(
+    val id: Int = 0,
+    val passengerId: Int = 0,
+    val status: String = "PENDING",
+    val seats: Int = 1
+)
 
 // ===== BILLING =====
 data class PaymentResponse(

@@ -29,6 +29,7 @@ fun ReservationDetailScreen(id: String, onBack: () -> Unit, onTrack: () -> Unit,
     val state by vm.detail.collectAsState()
     val cancelState by vm.cancelState.collectAsState()
     val advanceState by vm.advanceState.collectAsState()
+    val invoiceState by vm.invoice.collectAsState()
     var showCancelDialog by remember { mutableStateOf(false) }
     LaunchedEffect(id) { vm.loadDetail(id) }
 
@@ -58,6 +59,18 @@ fun ReservationDetailScreen(id: String, onBack: () -> Unit, onTrack: () -> Unit,
             confirmButton = { TextButton(onClick = { vm.resetCancel() }) { Text("Cerrar") } },
             title = { Text("No se pudo cancelar") },
             text = { Text(cs.message) }
+        )
+        else -> {}
+    }
+
+    // US25: comprobante digital emitido por el backend.
+    when (val inv = invoiceState) {
+        is UiState.Success -> InvoiceDialog(inv.data, onDismiss = { vm.resetInvoice() })
+        is UiState.Error -> AlertDialog(
+            onDismissRequest = { vm.resetInvoice() },
+            confirmButton = { TextButton(onClick = { vm.resetInvoice() }) { Text("Cerrar") } },
+            title = { Text("Comprobante no disponible") },
+            text = { Text(inv.message) }
         )
         else -> {}
     }
@@ -188,6 +201,15 @@ fun ReservationDetailScreen(id: String, onBack: () -> Unit, onTrack: () -> Unit,
                             Spacer(Modifier.height(10.dp))
                         }
                     }
+                    // US25: comprobante disponible cuando la reserva tiene (o pudo tener) pago.
+                    if (r.status in setOf("Aceptado", "En curso", "Finalizado")) {
+                        WPOutlinedButton(
+                            if (invoiceState is UiState.Loading) "Cargando comprobante..." else "Ver comprobante",
+                            enabled = invoiceState !is UiState.Loading,
+                            onClick = { vm.loadInvoice(r.id) }
+                        )
+                        Spacer(Modifier.height(10.dp))
+                    }
                     if (r.cancellable) {
                         OutlinedButton(
                             onClick = { showCancelDialog = true },
@@ -217,6 +239,29 @@ fun ReservationDetailScreen(id: String, onBack: () -> Unit, onTrack: () -> Unit,
             }
         }
     }
+}
+
+/** US25: comprobante digital con la numeración oficial del backend. */
+@Composable
+private fun InvoiceDialog(inv: com.example.moveo_frontend.data.remote.dto.InvoiceDto, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } },
+        title = { Text("Comprobante") },
+        text = {
+            Column {
+                DetailRow("N°", inv.invoiceNumber, bold = true)
+                DetailRow("Cliente", inv.customer.fullName.ifBlank { "—" })
+                DetailRow("Vehículo", inv.vehicle.name.ifBlank { "—" })
+                inv.vehicle.licensePlate?.takeIf { it.isNotBlank() }?.let { DetailRow("Placa", it) }
+                DetailRow("Días", "${inv.period.days}")
+                inv.payment.method?.let { DetailRow("Método de pago", it) }
+                inv.payment.transactionId?.takeIf { it.isNotBlank() }?.let { DetailRow("Transacción", it) }
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                DetailRow("Total", "${inv.amount.currency} ${inv.amount.total}", bold = true)
+            }
+        }
+    )
 }
 
 /** Política de cancelación con el reembolso que aplicaría ahora mismo (US54). */

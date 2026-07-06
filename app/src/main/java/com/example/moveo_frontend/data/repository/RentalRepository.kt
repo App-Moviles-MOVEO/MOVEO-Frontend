@@ -9,9 +9,12 @@ import com.example.moveo_frontend.data.Vehicle
 import com.example.moveo_frontend.data.remote.api.RentalApi
 import com.example.moveo_frontend.data.remote.dto.CreatePaymentRequest
 import com.example.moveo_frontend.data.remote.dto.CreateRentalRequest
+import com.example.moveo_frontend.data.remote.dto.InvoiceAmountDto
+import com.example.moveo_frontend.data.remote.dto.InvoiceDto
 import com.example.moveo_frontend.data.remote.dto.PatchRentalRequest
 import com.example.moveo_frontend.data.remote.dto.PaymentResponse
 import com.example.moveo_frontend.data.remote.dto.PublishVehicleRequest
+import com.example.moveo_frontend.data.remote.dto.RefundRequest
 import com.example.moveo_frontend.data.remote.dto.RentalPayRequest
 import com.example.moveo_frontend.data.remote.dto.bodyTypeQuery
 import com.example.moveo_frontend.data.remote.dto.nowIsoUtc
@@ -178,10 +181,25 @@ class RentalRepository(
         api.patchRental(reservation.id, PatchRentalRequest(status = "cancelled"))
         // Solo se reembolsa lo efectivamente cobrado (reservas pendientes sin pago no generan reembolso).
         val rentalId = reservation.id.toIntOrNull() ?: 0
-        val paid = runCatching { api.rentalPayments(rentalId) }.getOrDefault(emptyList())
-            .filter { it.isCharge }
-            .sumOf { it.amount }
-        val refund = minOf(amount.toDouble(), paid)
+        val charge = runCatching { api.rentalPayments(rentalId) }.getOrDefault(emptyList())
+            .firstOrNull { it.isCharge }
+            ?: return@runCatching CancelOutcome(pct, 0, refundProcessed = false)
+
+        // Camino preferido: el endpoint transaccional del backend aplica la política,
+        // marca el pago como refunded y notifica a ambas partes.
+        runCatching { api.refundPayment(charge.id, RefundRequest("Cancelación de reserva según política")) }
+            .fold(
+                onSuccess = { return@runCatching CancelOutcome(pct, it.refundedAmount.toInt(), refundProcessed = true) },
+                onFailure = { e ->
+                    // 422 = política 0% o ya reembolsado: cancelación válida, sin reembolso.
+                    if ((e as? retrofit2.HttpException)?.code() == 422) {
+                        return@runCatching CancelOutcome(0, 0, refundProcessed = false)
+                    }
+                }
+            )
+
+        // Fallback para deploys sin /payments/{id}/refund: registrar el reembolso a mano.
+        val refund = minOf(amount.toDouble(), charge.amount)
         val refunded = refund > 0 && runCatching {
             api.createPayment(
                 CreatePaymentRequest(
@@ -216,6 +234,26 @@ class RentalRepository(
                 completedAt = if (newStatus == "completed") nowIsoUtc() else null
             )
         ).toDomain()
+    }
+
+    /** US25: comprobante oficial emitido por el backend (numeración correlativa). */
+    suspend fun invoice(reservationId: String): Result<InvoiceDto> = runCatching {
+        if (mock()) {
+            delay(300)
+            return@runCatching InvoiceDto(
+                invoiceNumber = "WPE-2026-000000",
+                rentalId = reservationId.toIntOrNull() ?: 0,
+                status = "issued",
+                amount = InvoiceAmountDto(total = 100.0)
+            )
+        }
+        runCatching { api.invoice(reservationId) }.getOrElse { e ->
+            // 404 = el backend aún no expone el comprobante (deploy pendiente).
+            if ((e as? retrofit2.HttpException)?.code() == 404) {
+                error("El comprobante todavía no está disponible para esta reserva.")
+            }
+            throw e
+        }
     }
 
     /** US20: confirma la llegada al destino → la reserva pasa a completed en el backend. */
