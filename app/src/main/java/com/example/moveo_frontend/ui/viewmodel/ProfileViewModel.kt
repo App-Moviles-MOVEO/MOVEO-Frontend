@@ -4,11 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moveo_frontend.data.Review
 import com.example.moveo_frontend.data.User
+import com.example.moveo_frontend.data.remote.dto.badgeLabel
 import com.example.moveo_frontend.di.ServiceLocator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+
+/** Estado KYC del usuario para el banner del perfil. */
+data class KycInfo(val status: String, val rejectionReason: String?)
 
 class ProfileViewModel : ViewModel() {
     private val auth = ServiceLocator.authRepo
@@ -21,6 +25,9 @@ class ProfileViewModel : ViewModel() {
     private val _reviews = MutableStateFlow<List<Review>>(emptyList())
     val reviews = _reviews.asStateFlow()
 
+    private val _kyc = MutableStateFlow<KycInfo?>(null)
+    val kyc = _kyc.asStateFlow()
+
     init { load() }
 
     fun load() {
@@ -28,15 +35,36 @@ class ProfileViewModel : ViewModel() {
         viewModelScope.launch {
             auth.me()
                 .onSuccess { me ->
-                    // Rating real: promedio de las reseñas recibidas (0.0 = aún sin reseñas).
                     val received = ops.myReviews().getOrDefault(emptyList())
                     _reviews.value = received
-                    val avg = if (received.isEmpty()) 0.0
+
+                    // Stats server-side (GET /users/{id}); si el deploy aún no las trae,
+                    // se calculan en el cliente como fallback.
+                    val detail = auth.myDetail().getOrNull()
+                    val stats = detail?.stats
+
+                    val clientAvg = if (received.isEmpty()) 0.0
                     else (received.map { it.rating }.average() * 10).roundToInt() / 10.0
-                    // Viajes completados reales del usuario.
-                    val trips = rentals.myReservations().getOrDefault(emptyList())
+                    val rating = stats?.reputation?.takeIf { it > 0 } ?: clientAvg
+
+                    val clientTrips = rentals.myReservations().getOrDefault(emptyList())
                         .count { it.status == "Finalizado" }
-                    _user.value = UiState.Success(me.copy(rating = avg, tripsCompleted = trips))
+                    val trips = stats?.completedRentals?.takeIf { it > 0 } ?: clientTrips
+
+                    val kycStatus = detail?.kycStatus ?: "not_submitted"
+                    _kyc.value = KycInfo(kycStatus, detail?.kycRejectionReason)
+
+                    val badges = stats?.badges?.map(::badgeLabel)
+                        ?: if (kycStatus == "approved") listOf("Verificado") else emptyList()
+
+                    _user.value = UiState.Success(
+                        me.copy(
+                            rating = rating,
+                            tripsCompleted = trips,
+                            badges = badges,
+                            verified = kycStatus == "approved"
+                        )
+                    )
                 }
                 .onFailure { _user.value = UiState.Error(it.friendly()) }
         }

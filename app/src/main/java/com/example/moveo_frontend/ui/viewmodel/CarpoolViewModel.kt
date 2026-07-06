@@ -11,6 +11,12 @@ import kotlinx.coroutines.launch
 
 class CarpoolViewModel : ViewModel() {
     private val repo = ServiceLocator.carpoolingRepo
+    private val session = ServiceLocator.session
+
+    // US11: género declarado del usuario ("female" | "male" | "" sin declarar),
+    // para validar la reserva en rutas exclusivas para mujeres.
+    private val _gender = MutableStateFlow("")
+    val gender = _gender.asStateFlow()
 
     private val _routes = MutableStateFlow<UiState<List<CarpoolRoute>>>(UiState.Loading)
     val routes = _routes.asStateFlow()
@@ -33,7 +39,16 @@ class CarpoolViewModel : ViewModel() {
     private val _community = MutableStateFlow<String?>(null)
     val community = _community.asStateFlow()
 
-    init { load() }
+    init {
+        load()
+        viewModelScope.launch { _gender.value = session.genderBlocking() }
+    }
+
+    /** El usuario confirma que es mujer (rutas solo-mujeres); queda guardado. */
+    fun confirmFemale() {
+        _gender.value = "female"
+        viewModelScope.launch { session.setGender("female") }
+    }
 
     fun setOnlyWomen(v: Boolean) { _onlyWomen.value = v; load() }
     fun setOnlyVerified(v: Boolean) { _onlyVerified.value = v; load() }

@@ -45,6 +45,7 @@ fun ProfileScreen(
     val auth: AuthViewModel = viewModel()
     val state by vm.user.collectAsState()
     val reviews by vm.reviews.collectAsState()
+    val kyc by vm.kyc.collectAsState()
     val scroll = rememberScrollState()
 
     Box(Modifier.fillMaxSize()) {
@@ -79,9 +80,40 @@ fun ProfileScreen(
                 }
 
                 Column(Modifier.padding(20.dp)) {
+                    // Banner de estado KYC (pending / rejected). Aprobado no muestra banner.
+                    kyc?.let { k ->
+                        when (k.status) {
+                            "pending" -> KycBanner(
+                                "Verificación en revisión",
+                                "Tu identidad está siendo revisada. Te avisaremos cuando se apruebe.",
+                                MaterialTheme.colorScheme.tertiaryContainer,
+                                MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            "rejected" -> KycBanner(
+                                "Verificación rechazada",
+                                k.rejectionReason?.takeIf { it.isNotBlank() }
+                                    ?: "Vuelve a enviar tus documentos para verificar tu identidad.",
+                                MaterialTheme.colorScheme.errorContainer,
+                                MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            "not_submitted" -> KycBanner(
+                                "Sin verificar",
+                                "Verifica tu identidad (KYC) para generar más confianza en la comunidad.",
+                                MaterialTheme.colorScheme.surfaceVariant,
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            else -> {}
+                        }
+                        if (k.status != "approved") Spacer(Modifier.height(20.dp))
+                    }
+
                     SectionTitle("Badges")
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        user.badges.forEach { VerifiedBadge(it) }
+                    if (user.badges.isEmpty()) {
+                        Text("Aún no tienes distintivos", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                    } else {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            user.badges.forEach { VerifiedBadge(it) }
+                        }
                     }
                     Spacer(Modifier.height(20.dp))
 
@@ -113,6 +145,17 @@ fun ProfileScreen(
                 }
                 Spacer(Modifier.height(80.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun KycBanner(title: String, message: String, bg: Color, fg: Color) {
+    Surface(color = bg, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(14.dp)) {
+            Text(title, fontWeight = FontWeight.SemiBold, color = fg)
+            Spacer(Modifier.height(4.dp))
+            Text(message, fontSize = 13.sp, color = fg.copy(alpha = 0.85f))
         }
     }
 }

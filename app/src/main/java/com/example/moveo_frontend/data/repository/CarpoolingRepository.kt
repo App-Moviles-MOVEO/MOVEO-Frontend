@@ -96,7 +96,9 @@ class CarpoolingRepository(
 
     suspend fun book(route: CarpoolRoute, seats: Int): Result<Unit> = runCatching {
         if (!mock()) {
-            api.book(route.id, BookSeatBody(seats))
+            // Crea una solicitud PENDING; el conductor la acepta/rechaza y recién ahí
+            // se descuenta el asiento. 400 sin passengerId, 409 si no hay cupo/duplicada.
+            api.book(route.id, BookSeatBody(passengerId = currentUserId(), seats = seats))
         } else {
             delay(500)
         }

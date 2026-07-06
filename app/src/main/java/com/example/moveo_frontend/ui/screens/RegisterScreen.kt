@@ -32,6 +32,7 @@ fun RegisterScreen(onBack: () -> Unit, onContinue: () -> Unit) {
     var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var role by remember { mutableStateOf<UserRole?>(null) }
+    var gender by remember { mutableStateOf("") } // "female" | "male" | "" (opcional)
     val scroll = rememberScrollState()
 
     LaunchedEffect(state) {
@@ -68,6 +69,28 @@ fun RegisterScreen(onBack: () -> Unit, onContinue: () -> Unit) {
             RoleOption("Pasajero", "Busco viajes compartidos", role == UserRole.PASSENGER) { role = UserRole.PASSENGER }
             Spacer(Modifier.height(20.dp))
 
+            // US11: habilita las rutas de carpool exclusivas para mujeres.
+            Text("Género (opcional)", fontWeight = FontWeight.SemiBold)
+            Text(
+                "Se usa para las rutas de carpool exclusivas para mujeres.",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = gender == "female",
+                    onClick = { gender = if (gender == "female") "" else "female" },
+                    label = { Text("Femenino") }
+                )
+                FilterChip(
+                    selected = gender == "male",
+                    onClick = { gender = if (gender == "male") "" else "male" },
+                    label = { Text("Masculino") }
+                )
+            }
+            Spacer(Modifier.height(20.dp))
+
             if (state is UiState.Error) {
                 Text(
                     (state as UiState.Error).message,
@@ -79,7 +102,7 @@ fun RegisterScreen(onBack: () -> Unit, onContinue: () -> Unit) {
 
             WPButton(
                 text = if (state is UiState.Loading) "Creando..." else "Continuar a verificación",
-                onClick = { vm.doRegister(name, email, phone, password, role!!.name) },
+                onClick = { vm.doRegister(name, email, phone, password, role!!.name, gender) },
                 enabled = role != null && state !is UiState.Loading
             )
             Spacer(Modifier.height(16.dp))

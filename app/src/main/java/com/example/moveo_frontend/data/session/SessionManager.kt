@@ -20,6 +20,9 @@ class SessionManager(private val context: Context) {
         val USER_EMAIL = stringPreferencesKey("user_email")
         val USER_ROLE = stringPreferencesKey("user_role")
         val KYC_COMPLETED = booleanPreferencesKey("kyc_completed")
+        // "female" | "male" | "" (no declarado). Para rutas solo-mujeres (US11);
+        // el backend aún no guarda género, así que vive solo en el dispositivo.
+        val USER_GENDER = stringPreferencesKey("user_gender")
     }
 
     val token: Flow<String?> = context.sessionDataStore.data.map { it[Keys.TOKEN] }
@@ -35,6 +38,12 @@ class SessionManager(private val context: Context) {
 
     suspend fun setKycCompleted() {
         context.sessionDataStore.edit { it[Keys.KYC_COMPLETED] = true }
+    }
+
+    suspend fun genderBlocking(): String = context.sessionDataStore.data.first()[Keys.USER_GENDER].orEmpty()
+
+    suspend fun setGender(gender: String) {
+        context.sessionDataStore.edit { it[Keys.USER_GENDER] = gender }
     }
 
     suspend fun save(userId: String, name: String, email: String, role: String, token: String = "", kycCompleted: Boolean = true) {

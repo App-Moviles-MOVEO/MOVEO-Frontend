@@ -8,6 +8,7 @@ import com.example.moveo_frontend.data.remote.dto.ForgotPasswordRequest
 import com.example.moveo_frontend.data.remote.dto.LoginRequest
 import com.example.moveo_frontend.data.remote.dto.RegisterRequest
 import com.example.moveo_frontend.data.remote.dto.ResetPasswordRequest
+import com.example.moveo_frontend.data.remote.dto.UserDetailDto
 import com.example.moveo_frontend.data.session.SessionManager
 import kotlinx.coroutines.delay
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -32,11 +33,13 @@ class AuthRepository(
     }
 
     suspend fun register(
-        name: String, email: String, phone: String, password: String, role: String
+        name: String, email: String, phone: String, password: String, role: String,
+        gender: String = ""
     ): Result<User> = runCatching {
         if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) {
             delay(600)
             session.save("u1", name, email, role, kycCompleted = false)
+            if (gender.isNotBlank()) session.setGender(gender)
             return@runCatching MockData.currentUser.copy(name = name, email = email)
         }
         // El backend pide firstName/lastName por separado y role "renter"/"owner".
@@ -45,9 +48,13 @@ class AuthRepository(
         val lastName = trimmed.substringAfter(' ', "")
         val backendRole = if (role.equals("PROVIDER", ignoreCase = true)) "owner" else "renter"
         val user = api.register(
-            RegisterRequest(firstName, lastName, email, password, phone.ifBlank { null }, backendRole)
+            RegisterRequest(
+                firstName, lastName, email, password, phone.ifBlank { null }, backendRole,
+                gender = gender.ifBlank { null }
+            )
         )
         session.save(user.id.toString(), user.toDomain().name, user.email, user.role, kycCompleted = false)
+        if (gender.isNotBlank()) session.setGender(gender)
         user.toDomain()
     }
 
@@ -70,6 +77,16 @@ class AuthRepository(
         val userId = session.userIdBlocking()?.toIntOrNull()
             ?: error("No hay sesión activa")
         api.me(userId).toDomain()
+    }
+
+    /** Perfil extendido del usuario actual: stats server-side y estado/motivo KYC. */
+    suspend fun myDetail(): Result<UserDetailDto> = runCatching {
+        if ((BuildConfig.USE_MOCK_DATA || BuildConfig.USE_MOCK_AUTH)) {
+            delay(200)
+            return@runCatching UserDetailDto(kycStatus = "approved")
+        }
+        val userId = session.userIdBlocking()?.toIntOrNull() ?: error("No hay sesión activa")
+        api.userDetail(userId)
     }
 
     suspend fun uploadKyc(dniFront: File, dniBack: File, selfie: File): Result<String> = runCatching {

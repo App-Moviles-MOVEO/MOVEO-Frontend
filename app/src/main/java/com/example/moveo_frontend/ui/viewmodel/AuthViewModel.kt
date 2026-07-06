@@ -37,14 +37,14 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun doRegister(name: String, email: String, phone: String, password: String, role: String) {
+    fun doRegister(name: String, email: String, phone: String, password: String, role: String, gender: String = "") {
         if (listOf(name, email, phone, password).any { it.isBlank() }) {
             _register.value = UiState.Error("Completa todos los campos")
             return
         }
         _register.value = UiState.Loading
         viewModelScope.launch {
-            repo.register(name.trim(), email.trim(), phone.trim(), password, role)
+            repo.register(name.trim(), email.trim(), phone.trim(), password, role, gender)
                 .onSuccess { _register.value = UiState.Success(it) }
                 .onFailure { _register.value = UiState.Error(it.friendly()) }
         }
