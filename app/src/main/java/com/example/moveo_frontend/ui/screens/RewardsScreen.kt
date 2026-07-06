@@ -21,14 +21,14 @@ import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.SectionTitle
 import com.example.moveo_frontend.ui.theme.OrangeReward
 import com.example.moveo_frontend.ui.viewmodel.ProfileViewModel
-import com.example.moveo_frontend.ui.viewmodel.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RewardsScreen(onBack: () -> Unit) {
     val vm: ProfileViewModel = viewModel()
-    val state by vm.user.collectAsState()
-    val rewardPoints = (state as? UiState.Success)?.data?.rewardPoints ?: 0
+    val reward by vm.reward.collectAsState()
+    val points = reward?.points ?: 0
+    val tier = reward?.tier ?: "Bronce"
     val scroll = rememberScrollState()
     Scaffold(topBar = {
         TopAppBar(title = { Text("Recompensas") }, navigationIcon = {
@@ -42,33 +42,37 @@ fun RewardsScreen(onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(Modifier.padding(20.dp)) {
-                    Text("Nivel Plata", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    Text("Nivel $tier", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                     Spacer(Modifier.height(6.dp))
-                    Text("$rewardPoints pts", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                    Text("$points pts", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
                     LinearProgressIndicator(
-                        progress = { 0.45f },
+                        progress = { reward?.progress ?: 0f },
                         color = Color.White,
                         trackColor = Color.White.copy(alpha = 0.3f),
                         modifier = Modifier.fillMaxWidth().height(8.dp)
                     )
                     Spacer(Modifier.height(6.dp))
-                    Text("550 pts más para llegar a Oro", color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp)
+                    Text(
+                        reward?.nextTier?.let { "${reward?.pointsToNext} pts más para llegar a $it" }
+                            ?: "¡Alcanzaste el nivel máximo!",
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 12.sp
+                    )
                 }
             }
             Spacer(Modifier.height(20.dp))
 
             SectionTitle("Cómo ganar puntos")
-            EarnRow("Completar un viaje", "+15 pts")
-            EarnRow("Alquilar un vehículo", "+50 pts")
-            EarnRow("Dejar reseña verificada", "+10 pts")
-            EarnRow("Referir a un amigo", "+100 pts")
+            EarnRow("Completar un viaje", "+50 pts")
+            EarnRow("Dejar una reseña", "+10 pts")
+            EarnRow("Mantener reputación ≥ 4.5", "+100 pts")
 
             Spacer(Modifier.height(20.dp))
             SectionTitle("Premios disponibles")
-            RewardRow("S/ 5 OFF en tu próximo carpooling", 200)
-            RewardRow("20% OFF en alquiler fin de semana", 400)
-            RewardRow("Día gratis de alquiler", 1500)
+            RewardRow("S/ 5 OFF en tu próximo carpooling", 200, points)
+            RewardRow("20% OFF en alquiler fin de semana", 400, points)
+            RewardRow("Día gratis de alquiler", 1500, points)
         }
     }
 }
@@ -89,7 +93,8 @@ private fun EarnRow(label: String, points: String) {
 }
 
 @Composable
-private fun RewardRow(label: String, cost: Int) {
+private fun RewardRow(label: String, cost: Int, points: Int) {
+    val canRedeem = points >= cost
     Surface(
         color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(10.dp),
@@ -97,10 +102,17 @@ private fun RewardRow(label: String, cost: Int) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
     ) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.CardGiftcard, null, tint = OrangeReward)
+            Icon(
+                Icons.Default.CardGiftcard, null,
+                tint = if (canRedeem) OrangeReward else MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Spacer(Modifier.width(10.dp))
             Text(label, modifier = Modifier.weight(1f), fontSize = 14.sp)
-            TextButton(onClick = {}) { Text("$cost pts") }
+            Button(
+                onClick = {},
+                enabled = canRedeem,
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+            ) { Text(if (canRedeem) "Canjear · $cost" else "$cost pts") }
         }
     }
 }

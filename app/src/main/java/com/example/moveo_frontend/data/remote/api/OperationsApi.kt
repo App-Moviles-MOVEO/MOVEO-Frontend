@@ -1,6 +1,7 @@
 package com.example.moveo_frontend.data.remote.api
 
 import com.example.moveo_frontend.data.remote.dto.AdventureRouteDto
+import com.example.moveo_frontend.data.remote.dto.CreateSupportTicketRequest
 import com.example.moveo_frontend.data.remote.dto.CreateUserReviewRequest
 import com.example.moveo_frontend.data.remote.dto.CreateVehicleReviewRequest
 import com.example.moveo_frontend.data.remote.dto.MessageResourceDto
@@ -66,4 +67,9 @@ interface OperationsApi {
 
     @GET("adventure-routes/{id}")
     suspend fun adventureRoute(@Path("id") id: String): AdventureRouteDto
+
+    // ===== Soporte / Emergencia =====
+    /** US08: crea un ticket de soporte (se usa para la alerta de emergencia). */
+    @POST("support-tickets")
+    suspend fun createSupportTicket(@Body req: CreateSupportTicketRequest)
 }

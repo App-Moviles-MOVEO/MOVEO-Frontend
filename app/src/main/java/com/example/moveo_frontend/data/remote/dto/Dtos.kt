@@ -623,3 +623,17 @@ data class SendMessageRequest(
 )
 
 data class TrackingPointDto(val lat: Double, val lng: Double, val time: String)
+
+// ===== SOPORTE / EMERGENCIA (backend /support-tickets) =====
+// POST /support-tickets. Se usa para la alerta de emergencia (US08):
+// type/category "emergency" y prioridad "urgent" para que soporte lo priorice.
+data class CreateSupportTicketRequest(
+    val userId: Int,
+    val subject: String,
+    val description: String,
+    val category: String? = null,
+    val priority: String? = null,
+    val type: String? = null,
+    val relatedId: Int? = null,
+    val relatedType: String? = null
+)

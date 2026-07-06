@@ -8,35 +8,31 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/** US21: métodos de pago vinculados por el usuario, persistentes en el dispositivo. */
 class PaymentMethodsViewModel : ViewModel() {
-    private val billing = ServiceLocator.billingRepo
+    private val store = ServiceLocator.paymentMethods
 
     private val _methods = MutableStateFlow<UiState<List<PaymentMethodDto>>>(UiState.Loading)
     val methods = _methods.asStateFlow()
 
-    private val items = mutableListOf<PaymentMethodDto>()
-
-    init { load() }
-
-    fun load() {
-        _methods.value = UiState.Loading
+    init {
         viewModelScope.launch {
-            billing.methods()
-                .onSuccess { items.clear(); items.addAll(it); emit() }
-                .onFailure { _methods.value = UiState.Error(it.friendly()) }
+            store.methods.collect { _methods.value = UiState.Success(it) }
         }
     }
 
+    fun load() { /* el flujo del store ya es reactivo; no hace falta recargar */ }
+
     fun addCard(last4: String) {
         val digits = last4.takeLast(4).padStart(4, '*')
-        items.add(PaymentMethodDto("pm_${System.currentTimeMillis()}", "Tarjeta de crédito", "Visa **** $digits"))
-        emit()
+        viewModelScope.launch { store.add("Tarjeta de crédito", "Visa **** $digits") }
+    }
+
+    fun addWallet(provider: String, phone: String) {
+        viewModelScope.launch { store.add(provider, "$provider · $phone") }
     }
 
     fun remove(id: String) {
-        items.removeAll { it.id == id }
-        emit()
+        viewModelScope.launch { store.remove(id) }
     }
-
-    private fun emit() { _methods.value = UiState.Success(items.toList()) }
 }

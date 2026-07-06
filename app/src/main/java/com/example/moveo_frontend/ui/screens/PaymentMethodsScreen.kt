@@ -38,7 +38,7 @@ fun PaymentMethodsScreen(onBack: () -> Unit) {
             ExtendedFloatingActionButton(
                 onClick = { showAdd = true },
                 icon = { Icon(Icons.Default.Add, null) },
-                text = { Text("Agregar tarjeta") }
+                text = { Text("Vincular método") }
             )
         }
     ) { padding ->
@@ -81,28 +81,56 @@ fun PaymentMethodsScreen(onBack: () -> Unit) {
     }
 
     if (showAdd) {
+        var tab by remember { mutableStateOf(0) } // 0 = tarjeta, 1 = Yape/Plin
         var last4 by remember { mutableStateOf("") }
+        var provider by remember { mutableStateOf("Yape") }
+        var phone by remember { mutableStateOf("") }
+        val cardValid = last4.length == 4
+        val walletValid = phone.length in 9..12
         AlertDialog(
             onDismissRequest = { showAdd = false },
-            title = { Text("Agregar tarjeta") },
+            title = { Text("Vincular método de pago") },
             text = {
                 Column {
-                    Text("Ingresa los últimos 4 dígitos (demo).", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TabRow(selectedTabIndex = tab) {
+                        Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Tarjeta") })
+                        Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Yape/Plin") })
+                    }
                     Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = last4,
-                        onValueChange = { if (it.length <= 4 && it.all(Char::isDigit)) last4 = it },
-                        label = { Text("Últimos 4 dígitos") },
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true
-                    )
+                    if (tab == 0) {
+                        Text("Ingresa los últimos 4 dígitos (demo).", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = last4,
+                            onValueChange = { if (it.length <= 4 && it.all(Char::isDigit)) last4 = it },
+                            label = { Text("Últimos 4 dígitos") },
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true
+                        )
+                    } else {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(selected = provider == "Yape", onClick = { provider = "Yape" }, label = { Text("Yape") })
+                            FilterChip(selected = provider == "Plin", onClick = { provider = "Plin" }, label = { Text("Plin") })
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = phone,
+                            onValueChange = { if (it.length <= 12 && it.all(Char::isDigit)) phone = it },
+                            label = { Text("Número de celular") },
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            singleLine = true
+                        )
+                    }
                 }
             },
             confirmButton = {
                 TextButton(
-                    enabled = last4.length == 4,
-                    onClick = { vm.addCard(last4); showAdd = false }
-                ) { Text("Agregar") }
+                    enabled = if (tab == 0) cardValid else walletValid,
+                    onClick = {
+                        if (tab == 0) vm.addCard(last4) else vm.addWallet(provider, phone)
+                        showAdd = false
+                    }
+                ) { Text("Vincular") }
             },
             dismissButton = { TextButton(onClick = { showAdd = false }) { Text("Cancelar") } }
         )

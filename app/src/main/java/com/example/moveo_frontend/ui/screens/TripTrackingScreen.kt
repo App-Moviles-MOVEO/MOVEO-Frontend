@@ -10,6 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,9 +38,31 @@ fun TripTrackingScreen(routeId: String, onBack: () -> Unit, onRate: () -> Unit) 
     val progress by vm.progress.collectAsState()
     val etaMinutes by vm.etaMinutes.collectAsState()
     val completeState by vm.completeState.collectAsState()
+    val sosState by vm.sosState.collectAsState()
     var showArrivalDialog by remember { mutableStateOf(false) }
+    var showSosDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     LaunchedEffect(routeId) { vm.load(routeId) }
+
+    // US08: feedback de la alerta de emergencia (toast + reset).
+    LaunchedEffect(sosState) {
+        when (val s = sosState) {
+            is UiState.Success -> {
+                Toast.makeText(
+                    context,
+                    "Alerta de emergencia enviada. Soporte fue notificado.",
+                    Toast.LENGTH_LONG
+                ).show()
+                vm.resetSos()
+            }
+            is UiState.Error -> {
+                Toast.makeText(context, s.message, Toast.LENGTH_LONG).show()
+                vm.resetSos()
+            }
+            else -> {}
+        }
+    }
 
     val fallback = listOf(
         LatLng(-12.0464, -77.0428),
@@ -77,6 +101,27 @@ fun TripTrackingScreen(routeId: String, onBack: () -> Unit, onRate: () -> Unit) 
                 }) { Text("Sí, he llegado") }
             },
             dismissButton = { TextButton(onClick = { showArrivalDialog = false }) { Text("Aún no") } }
+        )
+    }
+    if (showSosDialog) {
+        AlertDialog(
+            onDismissRequest = { showSosDialog = false },
+            title = { Text("¿Activar alerta de emergencia?") },
+            text = {
+                Text(
+                    "Se enviará una alerta con tu ubicación al equipo de soporte y " +
+                        "quedará registrada. Úsala solo ante una situación real."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSosDialog = false
+                    vm.triggerSos(routeId)
+                }) { Text("Enviar alerta") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSosDialog = false }) { Text("Cancelar") }
+            }
         )
     }
     if (completeState is UiState.Error) {
@@ -148,11 +193,14 @@ fun TripTrackingScreen(routeId: String, onBack: () -> Unit, onRate: () -> Unit) 
                             Text("Llamar")
                         }
                         Button(
-                            onClick = { /* SOS */ },
+                            onClick = { if (sosState !is UiState.Loading) showSosDialog = true },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("SOS", fontWeight = FontWeight.Bold)
+                            Text(
+                                if (sosState is UiState.Loading) "Enviando..." else "SOS",
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                     Spacer(Modifier.height(12.dp))
