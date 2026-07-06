@@ -112,7 +112,15 @@ fun PaymentScreen(id: String, onBack: () -> Unit, onSuccess: () -> Unit) {
                     val rental = v.pricePerDay * days
                     val fee = (rental * 0.05).toInt()
                     val deposit = v.depositAmount
-                    val total = rental + fee + deposit
+                    // US27: el cupón descuenta sobre el cobro real (alquiler + servicio), no sobre la garantía.
+                    val subtotal = rental + fee
+                    var couponInput by remember { mutableStateOf("") }
+                    var appliedCode by remember { mutableStateOf<String?>(null) }
+                    val coupon = remember(appliedCode, subtotal) {
+                        appliedCode?.let { com.example.moveo_frontend.util.PromoCatalog.apply(it, subtotal.toDouble()) }
+                    }
+                    val discount = coupon?.takeIf { it.status.isSuccess }?.discount?.toInt() ?: 0
+                    val total = subtotal - discount + deposit
                     // Choque con reservas existentes del vehículo (pending/accepted/active).
                     val datesConflict = busyRanges.any { it.overlaps(startMillis, endMillis) }
 
@@ -171,6 +179,43 @@ fun PaymentScreen(id: String, onBack: () -> Unit, onSuccess: () -> Unit) {
                                 }
                             }
 
+                            // ---- Cupón de descuento (US27) ----
+                            Spacer(Modifier.height(24.dp))
+                            Text("Cupón de descuento", fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(10.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                OutlinedTextField(
+                                    value = couponInput,
+                                    onValueChange = { couponInput = it.uppercase() },
+                                    label = { Text("Código") },
+                                    singleLine = true,
+                                    enabled = appliedCode == null,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                if (appliedCode == null) {
+                                    Button(
+                                        onClick = { appliedCode = couponInput },
+                                        enabled = couponInput.isNotBlank(),
+                                        modifier = Modifier.height(56.dp)
+                                    ) { Text("Aplicar") }
+                                } else {
+                                    OutlinedButton(
+                                        onClick = { appliedCode = null; couponInput = "" },
+                                        modifier = Modifier.height(56.dp)
+                                    ) { Text("Quitar") }
+                                }
+                            }
+                            coupon?.let { c ->
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    c.message(),
+                                    fontSize = 12.sp,
+                                    color = if (c.status.isSuccess) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.error
+                                )
+                            }
+
                             Spacer(Modifier.height(24.dp))
                             Text("Resumen", fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(10.dp))
@@ -186,6 +231,9 @@ fun PaymentScreen(id: String, onBack: () -> Unit, onSuccess: () -> Unit) {
                                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
                                     SummaryRow("Alquiler (S/ ${v.pricePerDay} x $days)", "S/ $rental")
                                     SummaryRow("Servicio MOVEO (5%)", "S/ $fee")
+                                    if (discount > 0) {
+                                        SummaryRow("Descuento ($appliedCode)", "- S/ $discount")
+                                    }
                                     SummaryRow("Garantía (Escrow)", "S/ $deposit")
                                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
                                     SummaryRow("Total", "S/ $total", bold = true)

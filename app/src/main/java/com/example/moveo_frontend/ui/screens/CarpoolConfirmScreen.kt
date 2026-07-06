@@ -20,7 +20,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.StateContainer
 import com.example.moveo_frontend.ui.components.WPButton
-import com.example.moveo_frontend.ui.components.WPOutlinedButton
 import com.example.moveo_frontend.ui.viewmodel.CarpoolViewModel
 import com.example.moveo_frontend.ui.viewmodel.UiState
 
@@ -51,9 +50,9 @@ fun CarpoolConfirmScreen(id: String, onBack: () -> Unit, onDone: () -> Unit) {
                 ) {
                     Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(96.dp))
                     Spacer(Modifier.height(16.dp))
-                    Text("¡Solicitud enviada!", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Text("¡Solicitud enviada y pagada!", fontSize = 22.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
-                    Text("Tu asiento queda pendiente hasta que el conductor acepte la solicitud. El pago se hace al confirmarse; puedes coordinar por el chat.",
+                    Text("Pagaste tu asiento por adelantado. Queda pendiente hasta que el conductor acepte; si no acepta, se te reembolsa. Coordina los detalles por el chat.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(32.dp))
                     WPButton("Listo", onClick = onDone)
@@ -146,13 +145,14 @@ fun CarpoolConfirmScreen(id: String, onBack: () -> Unit, onDone: () -> Unit) {
                                     else showWomenDialog = true
                                 }
                                 WPButton(
-                                    text = if (bookState is UiState.Loading) "Procesando..." else "Pagar con Yape S/ $total",
+                                    text = if (bookState is UiState.Loading) "Procesando..." else "Pagar y solicitar · Yape S/ $total",
                                     enabled = bookState !is UiState.Loading,
                                     onClick = tryBook
                                 )
-                                WPOutlinedButton(
-                                    text = "Confirmar y pagar al subir",
-                                    onClick = tryBook
+                                Text(
+                                    "Se cobra por adelantado. Si el conductor no acepta, se te reembolsa.",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }

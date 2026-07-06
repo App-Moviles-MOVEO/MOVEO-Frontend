@@ -7,6 +7,7 @@ import com.example.moveo_frontend.data.MockData
 import com.example.moveo_frontend.data.remote.api.CarpoolingApi
 import com.example.moveo_frontend.data.remote.dto.BookSeatBody
 import com.example.moveo_frontend.data.remote.dto.CreateCarpoolRequest
+import com.example.moveo_frontend.data.remote.dto.CreatePaymentRequest
 import com.example.moveo_frontend.data.remote.dto.PublishRouteRequest
 import com.example.moveo_frontend.data.remote.dto.TrackingPointDto
 import com.example.moveo_frontend.data.session.SessionManager
@@ -96,9 +97,25 @@ class CarpoolingRepository(
 
     suspend fun book(route: CarpoolRoute, seats: Int): Result<Unit> = runCatching {
         if (!mock()) {
-            // Crea una solicitud PENDING; el conductor la acepta/rechaza y recién ahí
+            val me = currentUserId()
+            // 1) Crea la solicitud PENDING; el conductor la acepta/rechaza y recién ahí
             // se descuenta el asiento. 400 sin passengerId, 409 si no hay cupo/duplicada.
-            api.book(route.id, BookSeatBody(passengerId = currentUserId(), seats = seats))
+            // Se valida el aforo aquí (antes de cobrar) para no cobrar sin cupo.
+            api.book(route.id, BookSeatBody(passengerId = me, seats = seats))
+            // 2) US23: prepago de la cuota al enviar la solicitud. El pasajero paga al
+            // conductor (recipient) por adelantado; queda registrado en /payments.
+            api.pay(
+                CreatePaymentRequest(
+                    payerId = me,
+                    recipientId = route.ownerId,
+                    rentalId = 0,
+                    amount = (route.pricePerSeat * seats).toDouble(),
+                    paymentMethod = "yape",
+                    type = "carpool_seat",
+                    status = "completed",
+                    description = "Cuota de asiento · ${route.origin} → ${route.destination} ($seats)"
+                )
+            )
         } else {
             delay(500)
         }
