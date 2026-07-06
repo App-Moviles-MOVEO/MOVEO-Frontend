@@ -5,6 +5,7 @@ import com.example.moveo_frontend.data.MockData
 import com.example.moveo_frontend.data.Review
 import com.example.moveo_frontend.data.remote.api.OperationsApi
 import com.example.moveo_frontend.data.remote.dto.ChatMessageDto
+import com.example.moveo_frontend.data.remote.dto.CreateSupportTicketRequest
 import com.example.moveo_frontend.data.remote.dto.CreateUserReviewRequest
 import com.example.moveo_frontend.data.remote.dto.CreateVehicleReviewRequest
 import com.example.moveo_frontend.data.remote.dto.NotificationDto
@@ -120,5 +121,49 @@ class OperationsRepository(
         val me = currentUserId()
         val other = to.toIntOrNull() ?: error("Conversación inválida")
         api.send(SendMessageRequest(senderId = me, receiverId = other, content = body)).toUi(me)
+    }
+
+    /**
+     * US08: registra una alerta de emergencia como ticket de soporte de máxima
+     * prioridad. Queda registrada de inmediato para que soporte la atienda.
+     */
+    suspend fun reportEmergency(routeId: String?, note: String): Result<Unit> = runCatching {
+        if (mock()) { delay(300); return@runCatching }
+        api.createSupportTicket(
+            CreateSupportTicketRequest(
+                userId = currentUserId(),
+                subject = "🚨 EMERGENCIA",
+                description = note,
+                category = "emergency",
+                priority = "urgent",
+                type = "emergency",
+                relatedId = routeId?.toIntOrNull(),
+                relatedType = if (routeId != null) "route" else null
+            )
+        )
+        Unit
+    }
+
+    /**
+     * US46: solicitud de alianza corporativa. Se registra como ticket de soporte
+     * (categoría "partnership") para que el equipo comercial le dé seguimiento.
+     */
+    suspend fun requestCorporatePartnership(
+        company: String,
+        contactEmail: String,
+        message: String
+    ): Result<Unit> = runCatching {
+        if (mock()) { delay(300); return@runCatching }
+        api.createSupportTicket(
+            CreateSupportTicketRequest(
+                userId = currentUserId(),
+                subject = "Alianza corporativa · $company",
+                description = "Empresa: $company\nContacto: $contactEmail\n\n$message",
+                category = "partnership",
+                priority = "normal",
+                type = "partnership"
+            )
+        )
+        Unit
     }
 }

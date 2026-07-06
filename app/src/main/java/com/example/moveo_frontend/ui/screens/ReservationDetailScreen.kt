@@ -129,6 +129,13 @@ fun ReservationDetailScreen(id: String, onBack: () -> Unit, onTrack: () -> Unit,
                         }
                     }
 
+                    // US09: PIN de entrega. El arrendatario lo muestra al propietario
+                    // al recibir el vehículo; el Owner lo valida con la misma fórmula.
+                    if (r.status == "Aceptado" || r.status == "En curso") {
+                        Spacer(Modifier.height(16.dp))
+                        DeliveryPinCard(r.id)
+                    }
+
                     if (r.cancellable) {
                         Spacer(Modifier.height(16.dp))
                         CancellationPolicyCard(r)
@@ -262,6 +269,39 @@ private fun InvoiceDialog(inv: com.example.moveo_frontend.data.remote.dto.Invoic
             }
         }
     )
+}
+
+/** US09: tarjeta con el PIN de entrega del viaje, derivado del id de la reserva. */
+@Composable
+private fun DeliveryPinCard(reservationId: String) {
+    val pin = com.example.moveo_frontend.util.TripPin.forRental(reservationId)
+    Surface(
+        color = MaterialTheme.colorScheme.primaryContainer,
+        shape = RoundedCornerShape(14.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text(
+                "PIN de entrega",
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Muéstraselo al propietario para validar la entrega del vehículo.",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                pin.toCharArray().joinToString("  "),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 4.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
 }
 
 /** Política de cancelación con el reembolso que aplicaría ahora mismo (US54). */

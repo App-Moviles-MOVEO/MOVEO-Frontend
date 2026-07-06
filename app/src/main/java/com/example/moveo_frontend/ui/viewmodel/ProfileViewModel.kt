@@ -14,6 +14,39 @@ import kotlin.math.roundToInt
 /** Estado KYC del usuario para el banner del perfil. */
 data class KycInfo(val status: String, val rejectionReason: String?)
 
+/**
+ * US29: nivel de fidelidad derivado de la actividad y reputación reales del usuario.
+ * El backend no expone un sistema de puntos, así que se calcula de forma
+ * determinística: viajes completados y reseñas suman puntos, y una reputación
+ * alta otorga un bono (recompensa a los usuarios mejor calificados).
+ */
+data class RewardStatus(
+    val points: Int,
+    val tier: String,
+    val nextTier: String?,
+    val progress: Float,
+    val pointsToNext: Int
+) {
+    companion object {
+        private val TIERS = listOf(0 to "Bronce", 500 to "Plata", 1500 to "Oro", 3000 to "Platino")
+
+        fun from(tripsCompleted: Int, reviewsCount: Int, rating: Double): RewardStatus {
+            val ratingBonus = if (rating >= 4.5) 100 else 0
+            val points = tripsCompleted * 50 + reviewsCount * 10 + ratingBonus
+            val currentIndex = TIERS.indexOfLast { points >= it.first }.coerceAtLeast(0)
+            val (currentMin, tier) = TIERS[currentIndex]
+            val next = TIERS.getOrNull(currentIndex + 1)
+            return if (next == null) {
+                RewardStatus(points, tier, null, 1f, 0)
+            } else {
+                val span = (next.first - currentMin).coerceAtLeast(1)
+                val progress = ((points - currentMin).toFloat() / span).coerceIn(0f, 1f)
+                RewardStatus(points, tier, next.second, progress, (next.first - points).coerceAtLeast(0))
+            }
+        }
+    }
+}
+
 class ProfileViewModel : ViewModel() {
     private val auth = ServiceLocator.authRepo
     private val ops = ServiceLocator.operationsRepo
@@ -27,6 +60,9 @@ class ProfileViewModel : ViewModel() {
 
     private val _kyc = MutableStateFlow<KycInfo?>(null)
     val kyc = _kyc.asStateFlow()
+
+    private val _reward = MutableStateFlow<RewardStatus?>(null)
+    val reward = _reward.asStateFlow()
 
     init { load() }
 
@@ -56,6 +92,9 @@ class ProfileViewModel : ViewModel() {
 
                     val badges = stats?.badges?.map(::badgeLabel)
                         ?: if (kycStatus == "approved") listOf("Verificado") else emptyList()
+
+                    // US29: puntos y nivel derivados de la actividad real.
+                    _reward.value = RewardStatus.from(trips, received.size, rating)
 
                     _user.value = UiState.Success(
                         me.copy(

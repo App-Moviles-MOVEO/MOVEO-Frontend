@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 class TrackingViewModel : ViewModel() {
     private val repo = ServiceLocator.carpoolingRepo
     private val rentalRepo = ServiceLocator.rentalRepo
+    private val operationsRepo = ServiceLocator.operationsRepo
 
     private val _points = MutableStateFlow<List<TrackingPointDto>>(emptyList())
     val points = _points.asStateFlow()
@@ -34,6 +35,10 @@ class TrackingViewModel : ViewModel() {
     // US20: resultado de confirmar la llegada (PATCH /rentals/{id} → completed).
     private val _completeState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
     val completeState = _completeState.asStateFlow()
+
+    // US08: resultado de enviar la alerta de emergencia (POST /support-tickets).
+    private val _sosState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
+    val sosState = _sosState.asStateFlow()
 
     private var simulation: Job? = null
 
@@ -90,6 +95,20 @@ class TrackingViewModel : ViewModel() {
     }
 
     fun resetComplete() { _completeState.value = UiState.Idle }
+
+    /** US08: dispara la alerta de emergencia durante el viaje. */
+    fun triggerSos(routeId: String) {
+        _sosState.value = UiState.Loading
+        viewModelScope.launch {
+            val note = "ALERTA DE EMERGENCIA activada por el pasajero durante el " +
+                "viaje (ruta $routeId)."
+            operationsRepo.reportEmergency(routeId, note)
+                .onSuccess { _sosState.value = UiState.Success(Unit) }
+                .onFailure { _sosState.value = UiState.Error(it.friendly()) }
+        }
+    }
+
+    fun resetSos() { _sosState.value = UiState.Idle }
 
     private companion object {
         const val STEP_MS = 1500L
