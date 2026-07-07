@@ -57,4 +57,5 @@ object Routes {
     const val MY_LISTINGS = "my_listings"
     const val SETTINGS = "settings"
     const val HELP = "help"
+    const val TERMS = "terms"
 }

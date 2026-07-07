@@ -1,5 +1,6 @@
 package com.example.moveo_frontend.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,7 +19,7 @@ import com.example.moveo_frontend.ui.viewmodel.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(onBack: () -> Unit, onContinue: () -> Unit) {
+fun RegisterScreen(onBack: () -> Unit, onContinue: () -> Unit, onTerms: () -> Unit = {}) {
     val vm: AuthViewModel = viewModel()
     val state by vm.register.collectAsState()
 
@@ -92,6 +93,21 @@ fun RegisterScreen(onBack: () -> Unit, onContinue: () -> Unit) {
                 onClick = { vm.doRegister(name, email, phone, password, UserRole.RENTER.name, gender) },
                 enabled = gender.isNotBlank() && state !is UiState.Loading
             )
+            Spacer(Modifier.height(12.dp))
+            Row {
+                Text(
+                    "Al continuar aceptas los ",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    "Términos y Condiciones",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable(onClick = onTerms)
+                )
+            }
             Spacer(Modifier.height(16.dp))
         }
     }

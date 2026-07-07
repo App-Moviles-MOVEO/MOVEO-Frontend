@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
@@ -31,7 +32,12 @@ import com.example.moveo_frontend.ui.viewmodel.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit, onHelp: () -> Unit, onLoggedOut: () -> Unit) {
+fun SettingsScreen(
+    onBack: () -> Unit,
+    onHelp: () -> Unit,
+    onTerms: () -> Unit,
+    onLoggedOut: () -> Unit
+) {
     val vm: SettingsViewModel = viewModel()
     var pushNotifs by remember { mutableStateOf(true) }
     var tripReminders by remember { mutableStateOf(true) }
@@ -69,6 +75,9 @@ fun SettingsScreen(onBack: () -> Unit, onHelp: () -> Unit, onLoggedOut: () -> Un
             NavRow(Icons.Default.Language, "Idioma", "Español") {}
             NavRow(Icons.Default.Business, "Alianza corporativa", "¿Tu empresa quiere unirse?") { showPartnership = true }
             NavRow(Icons.AutoMirrored.Filled.HelpOutline, "Ayuda y soporte", "Preguntas frecuentes", onClick = onHelp)
+
+            SectionTitle("Legal")
+            NavRow(Icons.Default.Description, "Términos y condiciones", "Lee los términos de uso", onClick = onTerms)
 
             SectionTitle("Zona de peligro")
             NavRow(

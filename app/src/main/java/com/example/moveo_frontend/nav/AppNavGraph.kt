@@ -38,7 +38,8 @@ fun AppNavGraph(startDestination: String = Routes.WELCOME) {
         composable(Routes.REGISTER) {
             RegisterScreen(
                 onBack = { nav.popBackStack() },
-                onContinue = { nav.navigate(Routes.KYC) }
+                onContinue = { nav.navigate(Routes.KYC) },
+                onTerms = { nav.navigate(Routes.TERMS) }
             )
         }
         composable(Routes.KYC) {
@@ -91,6 +92,7 @@ fun AppNavGraph(startDestination: String = Routes.WELCOME) {
             SettingsScreen(
                 onBack = { nav.popBackStack() },
                 onHelp = { nav.navigate(Routes.HELP) },
+                onTerms = { nav.navigate(Routes.TERMS) },
                 onLoggedOut = {
                     nav.navigate(Routes.WELCOME) { popUpTo(0) { inclusive = true } }
                 }
@@ -98,6 +100,9 @@ fun AppNavGraph(startDestination: String = Routes.WELCOME) {
         }
         composable(Routes.HELP) {
             HelpScreen(onBack = { nav.popBackStack() })
+        }
+        composable(Routes.TERMS) {
+            TermsScreen(onBack = { nav.popBackStack() })
         }
         composable(Routes.PUBLISH_VEHICLE) {
             PublishVehicleScreen(
