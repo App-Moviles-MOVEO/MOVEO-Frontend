@@ -4,6 +4,8 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -67,8 +69,9 @@ fun VehicleDetailScreen(
         StateContainer(state, onRetry = { vm.load(id) }) { v ->
             val scroll = rememberScrollState()
             var isFav by remember { mutableStateOf(false) }
-            val photoCount = 3
-            val currentPhoto = 0
+            // Todas las fotos del vehículo (fallback a la principal, o vacío para el placeholder).
+            val photos = remember(v.id) { v.images.ifEmpty { listOfNotNull(v.imageUrl) } }
+            val pagerState = rememberPagerState(pageCount = { photos.size.coerceAtLeast(1) })
 
             Column(modifier = Modifier.fillMaxSize()) {
                 Column(
@@ -81,13 +84,18 @@ fun VehicleDetailScreen(
                             .fillMaxWidth()
                             .height(280.dp)
                     ) {
-                        if (v.imageUrl != null) {
-                            AsyncImage(
-                                model = v.imageUrl,
-                                contentDescription = "${v.brand} ${v.model}",
-                                contentScale = ContentScale.Crop,
+                        if (photos.isNotEmpty()) {
+                            HorizontalPager(
+                                state = pagerState,
                                 modifier = Modifier.fillMaxSize()
-                            )
+                            ) { page ->
+                                AsyncImage(
+                                    model = photos[page],
+                                    contentDescription = "${v.brand} ${v.model} (${page + 1}/${photos.size})",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         } else {
                             Box(
                                 modifier = Modifier.fillMaxSize().background(Color(0xFFE8E8E8)),
@@ -144,24 +152,26 @@ fun VehicleDetailScreen(
                             }
                         }
 
-                        Row(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = 14.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            repeat(photoCount) { i ->
-                                val w by animateDpAsState(if (i == currentPhoto) 18.dp else 6.dp, label = "dot")
-                                Box(
-                                    modifier = Modifier
-                                        .width(w)
-                                        .height(6.dp)
-                                        .background(
-                                            if (i == currentPhoto) BlueAccent else GraySurface,
-                                            RoundedCornerShape(3.dp)
-                                        )
-                                )
+                        if (photos.size > 1) {
+                            Row(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(bottom = 14.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                repeat(photos.size) { i ->
+                                    val w by animateDpAsState(if (i == pagerState.currentPage) 18.dp else 6.dp, label = "dot")
+                                    Box(
+                                        modifier = Modifier
+                                            .width(w)
+                                            .height(6.dp)
+                                            .background(
+                                                if (i == pagerState.currentPage) BlueAccent else GraySurface,
+                                                RoundedCornerShape(3.dp)
+                                            )
+                                    )
+                                }
                             }
                         }
                     }

@@ -18,6 +18,7 @@ data class Vehicle(
     val imageEmoji: String = "🚗",
     val ownerId: Int = 0,
     val imageUrl: String? = null,
+    val images: List<String> = emptyList(),
     val district: String = "",
     val lat: Double? = null,
     val lng: Double? = null,

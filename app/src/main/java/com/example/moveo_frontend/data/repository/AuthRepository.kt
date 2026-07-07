@@ -30,6 +30,8 @@ class AuthRepository(
         }
         val user = api.login(LoginRequest(email, password))
         session.save(user.id.toString(), user.toDomain().name, user.email, user.role)
+        // Hidrata el género declarado (el backend lo persiste) para las rutas solo-mujeres.
+        user.gender?.takeIf { it == "female" || it == "male" }?.let { session.setGender(it) }
         user.toDomain()
     }
 

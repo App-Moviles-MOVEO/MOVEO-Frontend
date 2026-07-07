@@ -125,7 +125,9 @@ data class UserDto(
     val phone: String? = null,
     val avatar: String? = null,
     // Estado KYC: "not_submitted" | "pending" | "approved" | "rejected".
-    val kycStatus: String? = "not_submitted"
+    val kycStatus: String? = "not_submitted",
+    // "female" | "male" | "unspecified" (el backend lo persiste desde el registro).
+    val gender: String? = null
 ) {
     fun toDomain() = User(
         name = listOf(firstName, lastName).filter { it.isNotBlank() }
@@ -189,6 +191,7 @@ data class VehicleDto(
         imageEmoji = "🚗",
         ownerId = ownerId,
         imageUrl = images.firstOrNull(),
+        images = images,
         district = location.district,
         lat = location.lat,
         lng = location.lng,

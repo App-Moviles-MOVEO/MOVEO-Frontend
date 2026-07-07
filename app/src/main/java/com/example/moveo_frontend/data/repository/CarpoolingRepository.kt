@@ -44,10 +44,12 @@ class CarpoolingRepository(
             }
         }
         // El backend filtra por onlyWomen y community; "verified" se ignora (todas se muestran).
+        // viewerId segmenta por comunidad de correo: solo llegan rutas del mismo grupo de dominio.
         api.list(
             type = "carpool",
             onlyWomen = onlyWomen.takeIf { it == true },
-            community = community?.takeIf { it.isNotBlank() }
+            community = community?.takeIf { it.isNotBlank() },
+            viewerId = session.userIdBlocking()?.toIntOrNull()
         ).map { it.toDomain() }
     }
 

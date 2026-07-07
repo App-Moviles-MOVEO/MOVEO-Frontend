@@ -58,7 +58,8 @@ class CarpoolViewModel : ViewModel() {
         _routes.value = UiState.Loading
         viewModelScope.launch {
             repo.routes(_onlyWomen.value.takeIf { it }, _onlyVerified.value.takeIf { it }, _community.value)
-                .onSuccess { _routes.value = UiState.Success(it) }
+                // No mostrar rutas sin cupos disponibles.
+                .onSuccess { _routes.value = UiState.Success(it.filter { r -> r.seatsAvailable > 0 }) }
                 .onFailure { _routes.value = UiState.Error(it.friendly()) }
         }
     }

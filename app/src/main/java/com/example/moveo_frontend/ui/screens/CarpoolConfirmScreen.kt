@@ -20,12 +20,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.StateContainer
 import com.example.moveo_frontend.ui.components.WPButton
+import com.example.moveo_frontend.ui.components.WPOutlinedButton
 import com.example.moveo_frontend.ui.viewmodel.CarpoolViewModel
 import com.example.moveo_frontend.ui.viewmodel.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CarpoolConfirmScreen(id: String, onBack: () -> Unit, onDone: () -> Unit) {
+fun CarpoolConfirmScreen(id: String, onBack: () -> Unit, onTrack: () -> Unit, onDone: () -> Unit) {
     val vm: CarpoolViewModel = viewModel()
     val state by vm.detail.collectAsState()
     val bookState by vm.book.collectAsState()
@@ -55,7 +56,9 @@ fun CarpoolConfirmScreen(id: String, onBack: () -> Unit, onDone: () -> Unit) {
                     Text("Pagaste tu asiento por adelantado. Queda pendiente hasta que el conductor acepte; si no acepta, se te reembolsa. Coordina los detalles por el chat.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(32.dp))
-                    WPButton("Listo", onClick = onDone)
+                    WPButton("Ver viaje en vivo", onClick = onTrack)
+                    Spacer(Modifier.height(10.dp))
+                    WPOutlinedButton("Listo", onClick = onDone)
                 }
             } else {
                 StateContainer(state, onRetry = { vm.loadDetail(id) }) { r ->

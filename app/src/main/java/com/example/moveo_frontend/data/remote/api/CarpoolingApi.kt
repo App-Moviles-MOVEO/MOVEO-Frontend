@@ -17,7 +17,10 @@ interface CarpoolingApi {
     suspend fun list(
         @Query("type") type: String? = "carpool",
         @Query("onlyWomen") onlyWomen: Boolean? = null,
-        @Query("community") community: String? = null
+        @Query("community") community: String? = null,
+        // Segmenta por comunidad de correo: el backend solo devuelve rutas del mismo grupo
+        // de dominio que este usuario (@upc.edu.pe vs. correos normales .com).
+        @Query("viewerId") viewerId: Int? = null
     ): List<AdventureRouteDto>
 
     @GET("adventure-routes/{id}")

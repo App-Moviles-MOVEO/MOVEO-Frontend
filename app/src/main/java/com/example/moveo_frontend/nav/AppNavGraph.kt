@@ -168,6 +168,7 @@ fun AppNavGraph(startDestination: String = Routes.WELCOME) {
             CarpoolConfirmScreen(
                 id = id,
                 onBack = { nav.popBackStack() },
+                onTrack = { nav.navigate(Routes.tripTracking(id)) },
                 onDone = { nav.navigate(Routes.MAIN) { popUpTo(Routes.MAIN) { inclusive = true } } }
             )
         }
@@ -179,7 +180,6 @@ fun AppNavGraph(startDestination: String = Routes.WELCOME) {
             ReservationDetailScreen(
                 id = id,
                 onBack = { nav.popBackStack() },
-                onTrack = { nav.navigate(Routes.tripTracking(id)) },
                 onRate = { nav.navigate(Routes.rate(targetUserId = id, reservationId = id)) }
             )
         }

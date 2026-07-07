@@ -24,7 +24,7 @@ import com.example.moveo_frontend.ui.viewmodel.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReservationDetailScreen(id: String, onBack: () -> Unit, onTrack: () -> Unit, onRate: () -> Unit) {
+fun ReservationDetailScreen(id: String, onBack: () -> Unit, onRate: () -> Unit) {
     val vm: ReservationsViewModel = viewModel()
     val state by vm.detail.collectAsState()
     val cancelState by vm.cancelState.collectAsState()
@@ -179,8 +179,6 @@ fun ReservationDetailScreen(id: String, onBack: () -> Unit, onTrack: () -> Unit,
                             Spacer(Modifier.height(10.dp))
                         }
                         "En curso" -> {
-                            WPButton("Ver viaje en vivo", onClick = onTrack)
-                            Spacer(Modifier.height(10.dp))
                             WPOutlinedButton(
                                 if (advancing) "Procesando..." else "Finalizar viaje (libera el vehículo)",
                                 enabled = !advancing,
