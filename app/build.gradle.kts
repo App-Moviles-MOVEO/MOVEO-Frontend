@@ -1,14 +1,15 @@
 import java.util.Properties
-
+// Bloque de plugins requeridos para compilar este módulo específico
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
-
+// Carga y lectura dinámica del archivo 'local.properties' (ubicado en la raíz del proyecto)
 val localProperties = Properties().apply {
     val f = rootProject.file("local.properties")
     if (f.exists()) f.inputStream().use { load(it) }
 }
+// Extracción de credenciales y variables de entorno desde local.properties con valores por defecto (fallback)
 val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY", "")
 val baseUrl: String = localProperties.getProperty("BASE_URL", "http://10.0.2.2:8080/")
 // Stripe: la publishable key va en la app; la secret key SOLO se usa en modo demo sin backend.
@@ -108,6 +109,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+// Herramientas de depuración (Debug Only)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
