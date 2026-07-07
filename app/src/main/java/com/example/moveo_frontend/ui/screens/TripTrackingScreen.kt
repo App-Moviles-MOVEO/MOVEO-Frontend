@@ -9,18 +9,25 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.moveo_frontend.R
 import com.example.moveo_frontend.ui.components.WPBackButton
 import com.example.moveo_frontend.ui.components.WPButton
 import com.example.moveo_frontend.ui.viewmodel.TrackingViewModel
 import com.example.moveo_frontend.ui.viewmodel.UiState
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -39,9 +46,11 @@ fun TripTrackingScreen(routeId: String, onBack: () -> Unit, onRate: () -> Unit) 
     val etaMinutes by vm.etaMinutes.collectAsState()
     val completeState by vm.completeState.collectAsState()
     val sosState by vm.sosState.collectAsState()
+    val started by vm.started.collectAsState()
     var showArrivalDialog by remember { mutableStateOf(false) }
     var showSosDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val carIcon = remember { carMarkerDescriptor(context) }
 
     LaunchedEffect(routeId) { vm.load(routeId) }
 
@@ -150,7 +159,13 @@ fun TripTrackingScreen(routeId: String, onBack: () -> Unit, onRate: () -> Unit) 
             ) {
                 Marker(state = MarkerState(position = path.first()), title = "Origen")
                 Marker(state = MarkerState(position = path.last()), title = "Destino")
-                Marker(state = MarkerState(position = livePosition), title = "Tu vehículo")
+                Marker(
+                    state = MarkerState(position = livePosition),
+                    title = "Tu vehículo",
+                    icon = carIcon,
+                    anchor = Offset(0.5f, 0.5f),
+                    zIndex = 2f
+                )
                 Polyline(points = path, color = MaterialTheme.colorScheme.primary, width = 10f)
             }
             Surface(tonalElevation = 4.dp) {
@@ -164,6 +179,7 @@ fun TripTrackingScreen(routeId: String, onBack: () -> Unit, onRate: () -> Unit) 
                     Text(
                         when {
                             arrived -> "Has llegado a tu destino 🎉"
+                            !started -> "Listo para iniciar. Pulsa \"Iniciar viaje\" para comenzar."
                             etaMinutes != null -> "En ruta · llegada estimada en $etaMinutes min"
                             else -> "Conectando con el GPS..."
                         },
@@ -204,13 +220,36 @@ fun TripTrackingScreen(routeId: String, onBack: () -> Unit, onRate: () -> Unit) 
                         }
                     }
                     Spacer(Modifier.height(12.dp))
-                    WPButton(
-                        if (completeState is UiState.Loading) "Confirmando llegada..."
-                        else "He llegado · Confirmar y calificar",
-                        onClick = { if (completeState !is UiState.Loading) showArrivalDialog = true }
-                    )
+                    if (!started) {
+                        // El viaje aún no arranca: el pasajero confirma el inicio y el auto empieza a moverse.
+                        WPButton(
+                            text = "Iniciar viaje",
+                            onClick = { vm.startTrip() }
+                        )
+                    } else {
+                        WPButton(
+                            if (completeState is UiState.Loading) "Confirmando llegada..."
+                            else "He llegado · Confirmar y calificar",
+                            onClick = { if (completeState !is UiState.Loading) showArrivalDialog = true }
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+/**
+ * Convierte el drawable vectorial del auto (ic_car_marker) en un BitmapDescriptor
+ * para usarlo como ícono del marcador "Tu vehículo" en el mapa.
+ */
+private fun carMarkerDescriptor(context: android.content.Context): BitmapDescriptor {
+    val drawable = ContextCompat.getDrawable(context, R.drawable.ic_car_marker)!!
+    val w = drawable.intrinsicWidth.coerceAtLeast(1)
+    val h = drawable.intrinsicHeight.coerceAtLeast(1)
+    val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    drawable.setBounds(0, 0, w, h)
+    drawable.draw(canvas)
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
 }

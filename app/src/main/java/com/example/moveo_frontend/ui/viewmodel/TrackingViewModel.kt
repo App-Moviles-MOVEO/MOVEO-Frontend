@@ -40,19 +40,36 @@ class TrackingViewModel : ViewModel() {
     private val _sosState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
     val sosState = _sosState.asStateFlow()
 
+    // El viaje solo empieza a moverse cuando el pasajero pulsa "Iniciar viaje".
+    private val _started = MutableStateFlow(false)
+    val started = _started.asStateFlow()
+
     private var simulation: Job? = null
+    private var route: List<TrackingPointDto> = emptyList()
 
     fun load(routeId: String) {
         _state.value = UiState.Loading
         viewModelScope.launch {
             repo.tracking(routeId)
-                .onSuccess {
-                    _points.value = it
+                .onSuccess { points ->
+                    // Si el backend aún no expone tracking, se usa una ruta demo para
+                    // poder mostrar el recorrido y el movimiento del vehículo.
+                    val effective = if (points.size >= 2) points else FALLBACK
+                    route = effective
+                    _points.value = effective
+                    _current.value = effective.first() // el auto parte en el origen
+                    _progress.value = 0f
                     _state.value = UiState.Success(Unit)
-                    startSimulation(it)
                 }
                 .onFailure { _state.value = UiState.Error(it.friendly()) }
         }
+    }
+
+    /** El pasajero confirma que el viaje inició: arranca la simulación del recorrido. */
+    fun startTrip() {
+        if (_started.value) return
+        _started.value = true
+        startSimulation(route)
     }
 
     /** Avanza la posición por la ruta interpolada cada STEP_MS hasta llegar al destino. */
@@ -112,5 +129,12 @@ class TrackingViewModel : ViewModel() {
 
     private companion object {
         const val STEP_MS = 1500L
+
+        // Ruta demo (Lima) usada cuando el backend no devuelve puntos de tracking.
+        val FALLBACK = listOf(
+            TrackingPointDto(-12.0464, -77.0428, ""),
+            TrackingPointDto(-12.0510, -77.0500, ""),
+            TrackingPointDto(-12.0600, -77.0560, "")
+        )
     }
 }

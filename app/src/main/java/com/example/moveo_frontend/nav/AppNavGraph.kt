@@ -63,6 +63,7 @@ fun AppNavGraph(startDestination: String = Routes.WELCOME) {
                 onNotifications = { nav.navigate(Routes.NOTIFICATIONS) },
                 onVehicleClick = { id -> nav.navigate(Routes.vehicleDetail(id)) },
                 onReservationClick = { id -> nav.navigate(Routes.reservationDetail(id)) },
+                onCarpoolTrack = { routeId -> nav.navigate(Routes.tripTracking(routeId)) },
                 onPublishVehicle = { nav.navigate(Routes.PUBLISH_VEHICLE) },
                 onPublishCarpool = { nav.navigate(Routes.CARPOOL_PUBLISH) },
                 onEditProfile = { nav.navigate(Routes.PROFILE_EDIT) },

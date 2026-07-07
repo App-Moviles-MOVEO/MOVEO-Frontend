@@ -25,7 +25,10 @@ import com.example.moveo_frontend.ui.theme.OrangeReward
 import com.example.moveo_frontend.ui.viewmodel.ReservationsViewModel
 
 @Composable
-fun ReservationsScreen(onClick: (String) -> Unit = {}) {
+fun ReservationsScreen(
+    onClick: (String) -> Unit = {},
+    onCarpoolClick: (String) -> Unit = {}
+) {
     val vm: ReservationsViewModel = viewModel()
     val state by vm.state.collectAsState()
     val carpools by vm.carpools.collectAsState()
@@ -52,7 +55,7 @@ fun ReservationsScreen(onClick: (String) -> Unit = {}) {
                     }
                     if (carpools.isNotEmpty()) {
                         item { SectionHeader("Viajes compartidos") }
-                        items(carpools) { b -> CarpoolBookingCard(b) }
+                        items(carpools) { b -> CarpoolBookingCard(b, onCarpoolClick) }
                     }
                     item { Spacer(Modifier.height(8.dp)) }
                 }
@@ -95,12 +98,12 @@ private fun RentalCard(r: Reservation, onClick: (String) -> Unit) {
 }
 
 @Composable
-private fun CarpoolBookingCard(b: CarpoolBooking) {
+private fun CarpoolBookingCard(b: CarpoolBooking, onClick: (String) -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(12.dp),
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().clickable { onClick(b.routeId) }
     ) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             CarpoolThumb(size = 48.dp)
@@ -111,6 +114,12 @@ private fun CarpoolBookingCard(b: CarpoolBooking) {
                     "${b.departureTime} · ${b.date} · ${b.seats} ${if (b.seats == 1) "asiento" else "asientos"}",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Toca para ver el viaje en vivo",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(Modifier.height(4.dp))
                 StatusChip("Reservado")

@@ -32,6 +32,7 @@ fun MainScreen(
     onNotifications: () -> Unit,
     onVehicleClick: (String) -> Unit,
     onReservationClick: (String) -> Unit,
+    onCarpoolTrack: (String) -> Unit,
     onPublishVehicle: () -> Unit,
     onPublishCarpool: () -> Unit,
     onEditProfile: () -> Unit,
@@ -51,7 +52,7 @@ fun MainScreen(
                 0 -> HomeScreen(onCatalog, onCarpoolSearch, onSafety, onRewards, onNotifications, onVehicleClick)
                 1 -> CatalogScreen(onBack = { tab = 0 }, onVehicleClick = onVehicleClick, onPublish = onPublishVehicle)
                 2 -> CarpoolSearchScreen(onBack = { tab = 0 }, onRouteClick = onCarpoolDetail, onPublish = onPublishCarpool)
-                3 -> ReservationsScreen(onClick = onReservationClick)
+                3 -> ReservationsScreen(onClick = onReservationClick, onCarpoolClick = onCarpoolTrack)
                 4 -> ProfileScreen(onLogout = onLogout, onEditProfile = onEditProfile, onPaymentMethods = onPaymentMethods, onMyListings = onMyListings, onSettings = onSettings, onHelp = onHelp)
             }
         }
